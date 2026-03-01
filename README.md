@@ -1,6 +1,6 @@
-# AmneziaWG Architect
-
 <div align="center">
+
+# AmneziaWG Architect
 
 [![Pages Deploy](https://img.shields.io/github/actions/workflow/status/Vadim-Khristenko/AmneziaWG-Architect/deploy-pages.yml?branch=main&label=pages%20deploy&logo=github&style=flat-square)](https://github.com/Vadim-Khristenko/AmneziaWG-Architect/actions)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg?style=flat-square)](LICENSE)
