@@ -30,8 +30,7 @@ jobs:
           cp index.html site/
           cp style.css  site/
           cp script.js  site/
-          # На будущее:
-          # cp -r assets/ site/assets/
+          cp -r assets/ site/assets/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

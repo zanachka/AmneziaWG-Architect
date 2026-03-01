@@ -12,6 +12,8 @@
 
 [▶ Открыть генератор](https://vadim-khristenko.github.io/AmneziaWG-Architect/) · [📋 Issues](https://github.com/Vadim-Khristenko/AmneziaWG-Architect/issues) · [🤝 Contributing](#contributing)
 
+*Основано на идее и доведено до ума [Special Junk Packet List](https://voidwaifu.github.io/Special-Junk-Packet-List/) от [@VoidWaifu](https://github.com/VoidWaifu), спасибо ему за вклад!*
+
 </div>
 
 ---
