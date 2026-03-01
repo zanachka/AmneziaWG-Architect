@@ -25,6 +25,12 @@
             href="assets/apple-touch-icon.png"
         />
         <meta name="apple-mobile-web-app-title" content="AWG-AiT" />
+        <meta name="og:image" content="assets/og-image.png" />
+        <meta name="og:title" content="AmneziaWG Architect" />
+        <meta
+            name="og:description"
+            content="Генератор продвинутой обфускации для обхода DPI в 2026 году"
+        />
         <link rel="manifest" href="assets/site.webmanifest" />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link
@@ -333,7 +339,7 @@
                             <p>
                                 В классическом WireGuard длина пакетов строго
                                 фиксирована. AmneziaWG добавляет псевдослучайные
-                                префиксы от 0 до 32/64 байт:
+                                префиксы от 0/1 до 32/64 байт:
                             </p>
                             <ul>
                                 <li>
@@ -344,13 +350,13 @@
                                 </li>
                                 <li>
                                     <code
-                                        >len(cookie) = 64 + random(0..S3)</code
+                                        >len(cookie) = 64 + random(1..S3)</code
                                     >
                                 </li>
                                 <li>
                                     <code
                                         >len(data) = payload +
-                                        random(0..S4)</code
+                                        random(1..S4)</code
                                     >
                                 </li>
                             </ul>
@@ -508,8 +514,8 @@
                                 пакетов: 32-битный тип сообщения заменяется на
                                 значение из заданного диапазона <code>H3</code>,
                                 а в начало добавляется мусорный префикс длиной
-                                <code>0..S3</code> байт. Итоговый размер:
-                                <code>64 + rand(0..S3)</code>.
+                                <code>1..S3</code> байт. Итоговый размер:
+                                <code>64 + rand(1..S3)</code>.
                             </p>
                         </div>
                     </div>
@@ -652,18 +658,27 @@
                 </div>
                 <div class="footer-links">
                     <a
+                        href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i data-lucide="github" class="icon-s"></i> Исходный код
+                    </a>
+                    <a
                         href="https://t.me/amnezia_vpn"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
                         <i data-lucide="send" class="icon-s"></i> Telegram Chat
+                        (Amnezia)
                     </a>
                     <a
                         href="https://github.com/amnezia-vpn/"
                         target="_blank"
                         rel="noopener noreferrer"
                     >
-                        <i data-lucide="github" class="icon-s"></i> Repositories
+                        <i data-lucide="github" class="icon-s"></i> AmneziaVPN
+                        Organization
                     </a>
                 </div>
                 <div class="footer-copy">
@@ -703,8 +718,6 @@
             // Инициализация иконок Lucide
             window.addEventListener("DOMContentLoaded", () => {
                 lucide.createIcons();
-                // Показываем поле для пользовательского хоста при загрузке:
-                // по умолчанию выбран QUIC-профиль (поддерживает мимикрию)
                 const wrap = document.getElementById("customHostWrap");
                 const hint = document.getElementById("customHostHint");
                 const input = document.getElementById("customHost");
@@ -716,7 +729,6 @@
                     input.placeholder = "Хост с QUIC (напр., fastly.net)";
             });
 
-            // Повторная инициализация иконок после генерации или изменений DOM (при необходимости)
             const originalGenerate = window.generate;
             window.generate = function () {
                 originalGenerate();
