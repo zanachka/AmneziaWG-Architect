@@ -1,0 +1,689 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+        />
+        <title>AmneziaWG Architect</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Unbounded:wght@300;500;700;900&family=Manrope:wght@300;400;500;600&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="style.css" />
+        <!-- Lucide Icons CDN -->
+        <script src="https://unpkg.com/lucide@latest"></script>
+    </head>
+    <body>
+        <div class="noise"></div>
+
+        <div class="wrap fade-in">
+            <!-- Header Section -->
+            <div class="header">
+                <span class="badge"
+                    ><i data-lucide="cpu" class="icon-s"></i> v2.0 READY</span
+                >
+                <h1>AWG <span>ARCHITECT</span></h1>
+                <p>
+                    Генератор продвинутой обфускации для обхода DPI в 2026 году
+                </p>
+                <div class="lamp"></div>
+            </div>
+
+            <!-- Version Selector -->
+            <div class="tabs">
+                <button
+                    class="tab-btn active"
+                    onclick="setVersion('2.0', this)"
+                >
+                    <i data-lucide="layers" class="icon-s"></i> AWG 2.0
+                </button>
+                <button class="tab-btn" onclick="setVersion('1.5', this)">
+                    AWG 1.5
+                </button>
+                <button class="tab-btn" onclick="setVersion('1.0', this)">
+                    AWG 1.0
+                </button>
+            </div>
+
+            <!-- Main Config Grid -->
+            <div class="mgrid">
+                <div class="card a1">
+                    <div class="card-h">
+                        <div class="dot dg"></div>
+                        <div class="ctitle">
+                            <i data-lucide="settings-2" class="icon-m"></i>
+                            ПАРАМЕТРЫ ГЕНЕРАЦИИ
+                        </div>
+                    </div>
+
+                    <div class="controls">
+                        <div class="clabel">Профиль мимикрии I1:</div>
+                        <select
+                            id="quicProfile"
+                            class="sel"
+                            onchange="generate()"
+                        >
+                            <option value="quic_initial">
+                                QUIC Initial (RFC 9000)
+                            </option>
+                            <option value="quic_0rtt">
+                                QUIC 0-RTT (Early Data)
+                            </option>
+                            <option value="tls_client_hello">
+                                TLS 1.3 Client Hello
+                            </option>
+                            <option value="wireguard_noise">
+                                Noise_IK (Standard)
+                            </option>
+                            <option value="dtls">DTLS 1.3 Handshake</option>
+                            <option value="http3">HTTP/3 Host Mimicry</option>
+                            <option value="sip">SIP (VoIP Signaling)</option>
+                            <option value="random">🎲 Случайный выбор</option>
+                        </select>
+
+                        <div id="customHostWrap" class="custom-host">
+                            <input
+                                type="text"
+                                id="customHost"
+                                class="sel"
+                                placeholder="Хост с QUIC (напр., fastly.net)"
+                                onchange="generate()"
+                            />
+                            <div id="customHostHint" class="host-hint"></div>
+                        </div>
+
+                        <label class="check-label">
+                            <input
+                                type="checkbox"
+                                id="mimicAll"
+                                onchange="generate()"
+                            />
+                            Применять профиль мимикрии для I2–I5
+                        </label>
+
+                        <div class="clabel" style="margin-top: 5px">
+                            Интенсивность энтропии:
+                        </div>
+                        <div class="fbrow">
+                            <button
+                                id="ilow"
+                                class="int-b"
+                                onclick="setIntensity('low')"
+                            >
+                                LOW
+                            </button>
+                            <button
+                                id="imed"
+                                class="int-b am"
+                                onclick="setIntensity('medium')"
+                            >
+                                MED
+                            </button>
+                            <button
+                                id="ihig"
+                                class="int-b"
+                                onclick="setIntensity('high')"
+                            >
+                                HIGH
+                            </button>
+                        </div>
+
+                        <div class="clabel">Уровень Junk-пакетов (Jc):</div>
+                        <select
+                            id="junkLevel"
+                            class="sel"
+                            onchange="generate()"
+                        >
+                            <option value="0">0 — Отключено</option>
+                            <option value="3">3 — Оптимально</option>
+                            <option value="5" selected>5 — Рекомендуемо</option>
+                            <option value="8">8 — Высокий</option>
+                            <option value="12">12 — Параноидальный</option>
+                        </select>
+
+                        <button class="genbtn" onclick="generate()">
+                            <i data-lucide="refresh-cw" class="spin"></i>
+                            СГЕНЕРИРОВАТЬ НОВЫЙ
+                        </button>
+
+                        <div
+                            class="clabel"
+                            style="margin-top: 15px; margin-bottom: 5px"
+                        >
+                            Обратная связь:
+                        </div>
+                        <div class="fbrow">
+                            <button class="fbbtn fbok" onclick="feedback(true)">
+                                ✓ Работает
+                            </button>
+                            <button
+                                class="fbbtn fbbad"
+                                onclick="feedback(false)"
+                            >
+                                ✗ Не работает
+                            </button>
+                        </div>
+
+                        <div class="fbrow" style="margin-top: 15px">
+                            <div class="clabel" style="margin: 0">
+                                Статус:
+                                <span
+                                    id="modeLabel"
+                                    style="color: var(--accent)"
+                                    >MEDIUM</span
+                                >
+                            </div>
+                            <div class="clabel" style="margin: 0">
+                                Итерация: <span id="iterCount">0</span>
+                            </div>
+                        </div>
+                        <div class="itrack">
+                            <div id="d0" class="idot"></div>
+                            <div id="d1" class="idot"></div>
+                            <div id="d2" class="idot"></div>
+                            <div id="d3" class="idot"></div>
+                            <div id="d4" class="idot"></div>
+                        </div>
+                    </div>
+
+                    <div class="slog" id="statusLog">
+                        <!-- Logs here -->
+                    </div>
+                </div>
+
+                <div class="card a2">
+                    <div class="card-h">
+                        <div class="dot dy"></div>
+                        <div class="ctitle">
+                            <i data-lucide="file-code" class="icon-m"></i>
+                            ТАБЛИЦА ПАРАМЕТРОВ
+                        </div>
+                        <div class="btns">
+                            <button
+                                id="copyBtn"
+                                class="cbtn"
+                                onclick="copyConfig()"
+                            >
+                                <i data-lucide="copy" class="icon-s"></i>
+                                Копировать
+                            </button>
+                            <button class="cbtn dl" onclick="downloadConfig()">
+                                <i data-lucide="download" class="icon-s"></i>
+                                .conf
+                            </button>
+                        </div>
+                    </div>
+                    <div class="ctable" id="configTable">
+                        <!-- Table here -->
+                    </div>
+
+                    <div class="cprev">
+                        <div class="prevlabel">
+                            <i data-lucide="eye" class="icon-s"></i>
+                            Предпросмотр [Interface]
+                        </div>
+                        <pre class="prevcode" id="previewCode"></pre>
+                    </div>
+                </div>
+            </div>
+
+            <div class="a4"></div>
+
+            <!-- Documentation & FAQ Section -->
+            <div class="a5">
+                <div class="stitle">
+                    <i data-lucide="book-open" class="icon-m"></i> Техническая
+                    база и FAQ
+                </div>
+
+                <!-- NEW IMPORTANT NOTE -->
+                <div class="info-alert">
+                    <div class="info-alert-icon">
+                        <i data-lucide="alert-triangle"></i>
+                    </div>
+                    <div class="info-alert-content">
+                        <b>Важное ограничение:</b> Обфускация параметров (H1-H4,
+                        S1-S4, I1-I5) помогает скрыть <i>тип</i> трафика от DPI.
+                        Однако при использовании "белых списков" или полных
+                        отключениях внешнего интернета, данные настройки не
+                        влияют на доступ. В таких сценариях работоспособность
+                        зависит исключительно от <b>IP-адреса сервера</b> и его
+                        присутствия в разрешенных списках.
+                    </div>
+                </div>
+
+                <div class="fgrid">
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="shield-check" class="ficon"></i>
+                            <span class="ftitle"
+                                >Динамические заголовки (H1–H4)</span
+                            >
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                Во время инициализации туннеля AmneziaWG
+                                генерирует случайные значения из заданных
+                                диапазонов для каждого из 4-х типов пакетов
+                                WireGuard (Init, Response, Cookie, Data). Эти
+                                значения:
+                            </p>
+                            <ul>
+                                <li>
+                                    Заменяют предсказуемые идентификаторы
+                                    пакетов;
+                                </li>
+                                <li>Смещают байты версий и типов;</li>
+                                <li>Модифицируют зарезервированные биты.</li>
+                            </ul>
+                            <p>
+                                Для каждого пакета выбирается случайное значение
+                                из диапазона, а при приеме допускается любое
+                                значение из него же. Это делает заголовок
+                                непредсказуемым.
+                            </p>
+                            <div
+                                class="info-alert"
+                                style="padding: 10px; margin: 10px 0"
+                            >
+                                <b>Важно:</b> Диапазоны H1–H4 не должны
+                                пересекаться. В результате ни у каких двух
+                                клиентов нет одинаковых заголовков, что делает
+                                невозможным создание универсального правила DPI.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="box" class="ficon"></i>
+                            <span class="ftitle"
+                                >Рандомизация длин (S1–S4)</span
+                            >
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                В классическом WireGuard длина пакетов строго
+                                фиксирована. AmneziaWG добавляет псевдослучайные
+                                префиксы от 0 до 32/64 байт:
+                            </p>
+                            <ul>
+                                <li>
+                                    <code>len(init) = 148 + random(0..S1)</code>
+                                </li>
+                                <li>
+                                    <code>len(resp) = 92 + random(0..S2)</code>
+                                </li>
+                                <li>
+                                    <code
+                                        >len(cookie) = 64 + random(0..S3)</code
+                                    >
+                                </li>
+                                <li>
+                                    <code
+                                        >len(data) = payload +
+                                        random(0..S4)</code
+                                    >
+                                </li>
+                            </ul>
+                            <div
+                                class="info-alert"
+                                style="padding: 10px; margin: 10px 0"
+                            >
+                                <b>Правила для стабильности:</b>
+                                <code>S1 + 56 ≠ S2</code> и
+                                <code>S4 ≤ 32</code>.
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="venetian-mask" class="ficon"></i>
+                            <span class="ftitle">Сигнатуры CPS (I1–I5)</span>
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                Перед каждым хендшейком (каждые 120 сек) клиент
+                                может отправить до 5 UDP-пакетов в формате
+                                Custom Protocol Signature (CPS). Пакет
+                                <code>I1</code> содержит HEX-снимок начала
+                                реального протокола, остальные
+                                (<code>I2–I5</code>) повышают энтропию.
+                            </p>
+                            <p><b>Формат тегов CPS:</b></p>
+                            <ul>
+                                <li>
+                                    <code>&lt;b hex&gt;</code> — статические
+                                    байты (пр: <code>&lt;b 0xf6...&gt;</code>)
+                                </li>
+                                <li>
+                                    <code>&lt;c&gt;</code> — уникальный счетчик
+                                    пакетов
+                                </li>
+                                <li><code>&lt;t&gt;</code> — Unix timestamp</li>
+                                <li>
+                                    <code>&lt;r N&gt;</code> — криптографически
+                                    случайные байты (N ≤ 1000)
+                                </li>
+                                <li>
+                                    <code>&lt;rc N&gt;</code> — случайные
+                                    символы [A-Za-z0-9] (для текста)
+                                </li>
+                                <li>
+                                    <code>&lt;rd N&gt;</code> — случайные цифры
+                                    [0-9]
+                                </li>
+                            </ul>
+                            <p>
+                                Пример:
+                                <code
+                                    >i1 = &lt;b 0xc7000000010&gt;&lt;rc
+                                    8&gt;&lt;c&gt;&lt;t&gt;&lt;r 50&gt;</code
+                                >
+                            </p>
+                            <p>
+                                <i
+                                    >Если параметр I1 пуст, вся цепочка
+                                    игнорируется (режим AWG 1.0).</i
+                                >
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="train-front" class="ficon"></i>
+                            <span class="ftitle"
+                                >Junk-train (Jc, Jmin, Jmax)</span
+                            >
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                Сразу после отправки I-пакетов следует серия из
+                                <code>Jc</code> псевдослучайных пакетов, длина
+                                которых варьируется от <code>Jmin</code> до
+                                <code>Jmax</code> байт.
+                            </p>
+                            <p>
+                                Эти мусорные пакеты эффективно размывают
+                                временной и размерный профиль старта сессии,
+                                делая детекцию хендшейка системами DPI
+                                практически невозможной.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="venetian-mask" class="ficon"></i>
+                            <span class="ftitle"
+                                >Что такое профили мимикрии?</span
+                            >
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                <b>Мимикрия</b> — это способность подделывать
+                                структуру пакетов под популярные протоколы
+                                (HTTP/3, TLS, SIP и др.). Системы DPI
+                                анализируют первые байты соединения, чтобы
+                                понять, какой тип трафика идет. Если они видят
+                                "знакомый" протокол, они с большей вероятностью
+                                его пропустят.
+                            </p>
+                            <ul>
+                                <li>
+                                    <b>QUIC/HTTP3</b>: Самый надежный вариант в
+                                    2025 году. Популярен, работает поверх UDP.
+                                    DPI боятся блокировать его целиком.
+                                </li>
+                                <li>
+                                    <b>TLS 1.3 Client Hello</b>: Имитирует
+                                    начало защищенного соединения HTTPS.
+                                </li>
+                                <li>
+                                    <b>DTLS / SIP</b>: Специфичные протоколы
+                                    (VoIP, стриминг), которые часто добавляют в
+                                    исключения для обеспечения работы звонков.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="cookie" class="ficon"></i>
+                            <span class="ftitle"
+                                >Пакет Cookie Reply (H3, S3)</span
+                            >
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                В WireGuard сообщения Cookie Reply используются
+                                при высокой нагрузке на сервер в качестве защиты
+                                от DoS атак.
+                            </p>
+                            <p>
+                                AmneziaWG маскирует их аналогично другим типам
+                                пакетов: 32-битный тип сообщения заменяется на
+                                значение из заданного диапазона <code>H3</code>,
+                                а в начало добавляется мусорный префикс длиной
+                                <code>0..S3</code> байт. Итоговый размер:
+                                <code>64 + rand(0..S3)</code>.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="lock" class="ficon"></i>
+                            <span class="ftitle">Безопасность и Аудит</span>
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                На криптографическом уровне AmneziaWG
+                                <b>полностью идентичен WireGuard</b>
+                                (используются те же Curve25519,
+                                ChaCha20-Poly1305 и механизм обмена ключами
+                                Noise_IK).
+                            </p>
+                            <p>
+                                Обфускация работает исключительно на
+                                транспортном уровне: изменяются только заголовки
+                                и добавляется мусор, но сама полезная нагрузка
+                                остается оригинальной.
+                            </p>
+                            <p>
+                                <i
+                                    >Поскольку криптографическое ядро не
+                                    тронуто, все существующие результаты аудитов
+                                    безопасности WireGuard применимы к AmneziaWG
+                                    в полной мере.</i
+                                >
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="router" class="ficon"></i>
+                            <span class="ftitle">Настройка на роутерах</span>
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                Да, AmneziaWG можно настроить на домашних
+                                роутерах, но для этого требуется специальный
+                                пакет (не стандартный WireGuard).
+                            </p>
+                            <ul>
+                                <li>
+                                    <b>Keenetic:</b> Поддерживается через
+                                    специальный OPKG-пакет (amneziawg-go).
+                                </li>
+                                <li>
+                                    <b>OpenWrt:</b> Доступны пакеты
+                                    <code>kmod-amneziawg</code> и
+                                    <code>amneziawg-tools</code>.
+                                </li>
+                                <li>
+                                    <b>Mikrotik:</b> На данный момент нативной
+                                    поддержки AWG в RouterOS нет. Вы можете
+                                    использовать его только если поднимете
+                                    виртуальную машину внутри роутера.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="server" class="ficon"></i>
+                            <span class="ftitle"
+                                >Совместимость с обычным WG</span
+                            >
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                Если у вас сервер со стандартным WireGuard, вы
+                                <b>не сможете</b> подключиться к нему клиентом
+                                AmneziaWG с включенной обфускацией. Сервер
+                                просто не поймет измененные заголовки.
+                            </p>
+                            <p>
+                                Однако, если в клиенте выставить все параметры
+                                обфускации (H1-H4, Jc, S1-S4) в <b>0</b>, то
+                                AmneziaWG будет вести себя как обычный
+                                классический WireGuard и подключение пройдет
+                                успешно.
+                            </p>
+                        </div>
+                    </div>
+
+                    <div class="fcard">
+                        <div class="fhead" onclick="toggleFaq(this)">
+                            <i data-lucide="gauge" class="ficon"></i>
+                            <span class="ftitle"
+                                >Что делать, если скорость упала?</span
+                            >
+                            <span class="farrow"
+                                ><i data-lucide="chevron-down"></i
+                            ></span>
+                        </div>
+                        <div class="fbody">
+                            <p>
+                                Иногда из-за агрессивной маскировки или настроек
+                                провайдера скорость может снизиться.
+                            </p>
+                            <ul>
+                                <li>
+                                    Уменьшите значение <b>Junk-train (Jc)</b> до
+                                    3 или отключите (0). Большое количество
+                                    мусорных пакетов замедляет старт.
+                                </li>
+                                <li>
+                                    Уменьшите значения <b>S1-S4</b> или
+                                    интенсивность генерации.
+                                </li>
+                                <li>
+                                    Проверьте параметр <b>MTU</b> в настройках
+                                    туннеля. Из-за дополнительных данных
+                                    оптимальным значением может стать 1280 или
+                                    1360.
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-slogan">
+                    На страже вашей анонимности, приватности и безопасности.
+                </div>
+                <div class="footer-links">
+                    <a
+                        href="https://t.me/amnezia_vpn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i data-lucide="send" class="icon-s"></i> Telegram Chat
+                    </a>
+                    <a
+                        href="https://github.com/amnezia-vpn/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i data-lucide="github" class="icon-s"></i> Repositories
+                    </a>
+                </div>
+                <div class="footer-copy">
+                    AmneziaWG Architect &copy; 2026 | Инструмент для свободного
+                    интернета
+                </div>
+            </div>
+        </div>
+
+        <script src="script.js"></script>
+        <script>
+            // Инициализация иконок Lucide
+            window.addEventListener("DOMContentLoaded", () => {
+                lucide.createIcons();
+                // Показываем поле для пользовательского хоста при загрузке:
+                // по умолчанию выбран QUIC-профиль (поддерживает мимикрию)
+                const wrap = document.getElementById("customHostWrap");
+                const hint = document.getElementById("customHostHint");
+                const input = document.getElementById("customHost");
+                if (wrap) wrap.classList.add("show");
+                if (hint)
+                    hint.textContent =
+                        "QUIC-capable: fastly.net, cdn-apple.com, cdn1.telegram.org …";
+                if (input)
+                    input.placeholder = "Хост с QUIC (напр., fastly.net)";
+            });
+
+            // Повторная инициализация иконок после генерации или изменений DOM (при необходимости)
+            const originalGenerate = window.generate;
+            window.generate = function () {
+                originalGenerate();
+                setTimeout(() => lucide.createIcons(), 50);
+            };
+
+            const originalRenderCfg = window.renderCfg;
+            window.renderCfg = function (p) {
+                originalRenderCfg(p);
+                setTimeout(() => lucide.createIcons(), 50);
+            };
+        </script>
+    </body>
+</html>
