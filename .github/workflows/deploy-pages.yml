@@ -28,8 +28,9 @@ jobs:
         run: |
           mkdir -p site
           cp index.html site/
-          cp style.css  site/
           cp script.js  site/
+
+          cp about.html site/
           cp -r assets/ site/assets/
 
       - name: Upload Pages artifact

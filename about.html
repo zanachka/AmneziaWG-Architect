@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>О проекте — AmneziaWG Architect</title>
+        <meta
+            name="description"
+            content="Что такое AmneziaWG Architect? Это интерактивный инструмент для генерации сложных конфигураций обфускации трафика AmneziaWG. Создан для тех, кто хочет вернуть себе свободный интернет."
+        />
+
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Unbounded:wght@300;500;700;900&family=Manrope:wght@300;400;500;600&display=swap"
+            rel="stylesheet"
+        />
+
+        <link rel="stylesheet" href="assets/style.css" />
+        <link rel="stylesheet" href="assets/about.style.css" />
+
+        <script src="https://unpkg.com/lucide@latest"></script>
+
+        <link
+            rel="icon"
+            type="image/png"
+            href="assets/favicon-96x96.png"
+            sizes="96x96"
+        />
+        <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+        <link rel="shortcut icon" href="assets/favicon.ico" />
+    </head>
+    <body>
+        <div class="noise"></div>
+
+        <div class="about-wrap fade-in">
+            <a href="index.html" class="back-link">
+                <i data-lucide="arrow-left" style="width: 16px"></i> Вернуться к
+                генератору
+            </a>
+
+            <div class="hero-slogan">
+                Твой протокол — твои правила.<br />
+                <span>Невидимость по стандарту.</span>
+            </div>
+
+            <div class="section a1">
+                <h2><i data-lucide="info"></i> Что это за проект?</h2>
+                <p>
+                    <span class="highlight">AmneziaWG Architect</span> — это
+                    продвинутый веб-инструмент для создания уникальных профилей
+                    обфускации протокола <b>AmneziaWG</b>. Если обычный VPN
+                    просто шифрует данные, то Architect помогает «замаскировать»
+                    сам факт использования VPN.
+                </p>
+                <p>
+                    В современных реалиях системы анализа трафика (DPI) могут
+                    замечать характерные черты стандартных протоколов и
+                    блокировать их. Наш инструмент позволяет вам собрать
+                    «силуэт» другого, доверенного протокола: будь то
+                    видеозвонок, загрузка файлов или веб-серфинг.
+                </p>
+            </div>
+
+            <div class="section a2">
+                <h2><i data-lucide="help-circle"></i> Зачем это новичку?</h2>
+                <p>
+                    Если вы только начинаете пользоваться AmneziaVPN или подняли
+                    свой сервер через скрипты, стандартные настройки могут
+                    перестать работать из-за усиления фильтров DPI.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i data-lucide="check-circle"></i>
+                        <span>
+                            <b>Простая интеграция:</b> Названия параметров здесь
+                            (H1-H4, S1-S4, I1-I5)
+                            <b>в точности соответствуют</b> полям в приложении
+                            AmneziaVPN. Вам не нужно гадать, куда вставлять
+                            сгенерированные коды.
+                        </span>
+                    </li>
+                    <li>
+                        <i data-lucide="zap"></i>
+                        <span>
+                            <b>Умная генерация:</b> Инструмент не просто выдает
+                            случайные числа. Он соблюдает структуру реальных
+                            сетевых пакетов (QUIC, TLS, DTLS), делая вашу
+                            мимикрию максимально правдоподобной.
+                        </span>
+                    </li>
+                    <li>
+                        <i data-lucide="refresh-cw"></i>
+                        <span>
+                            <b>Режим «Не работает»:</b> Если ваш конфиг
+                            заблокировали, просто нажмите кнопку в генераторе —
+                            он усилит параметры и выдаст новую итерацию с более
+                            высокой энтропией.
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="section a3">
+                <h2><i data-lucide="server"></i> Для опытных пользователей</h2>
+                <p>
+                    Для тех, кто держит свои <b>Self-Hosted</b> серверы на Linux
+                    или использует роутеры (Keenetic, OpenWrt):
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i data-lucide="code"></i>
+                        <span>
+                            <b>Гибкое управление тегами:</b> Вы можете вручную
+                            включать или отключать CPS-теги
+                            (<code>&lt;c&gt;</code>, <code>&lt;t&gt;</code>,
+                            <code>&lt;r&gt;</code>), чтобы добиться
+                            совместимости с разными версиями ядер и клиентов.
+                        </span>
+                    </li>
+                    <li>
+                        <i data-lucide="shield"></i>
+                        <span>
+                            <b>Безопасность параметров:</b> Генератор
+                            автоматически следит за ограничениями протокола
+                            (например, <code>S4 ≤ 32</code> или уникальность
+                            <code>H1-H4</code>), предотвращая ошибки в конфигах.
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <div class="section a4">
+                <h2><i data-lucide="lock"></i> Полная приватность</h2>
+                <p>Проект работает по принципу <b>Zero-Data</b>:</p>
+                <ul class="feature-list">
+                    <li>
+                        <i data-lucide="cpu"></i>
+                        <span>
+                            <b>Client-Side:</b> Весь код выполняется в вашем
+                            браузере. Никакие данные не отправляются на сервер,
+                            у нас нет базы данных и аналитики.
+                        </span>
+                    </li>
+                    <li>
+                        <i data-lucide="eye-off"></i>
+                        <span>
+                            <b>Offline Ready:</b> Вы можете сохранить эту
+                            страницу и пользоваться ей без доступа к интернету —
+                            логика генерации останется доступной.
+                        </span>
+                    </li>
+                </ul>
+            </div>
+
+            <!-- Footer -->
+            <div class="footer">
+                <div class="footer-slogan">
+                    AmneziaWG Architect — Спроектировано для свободы.
+                </div>
+                <div class="footer-links">
+                    <a
+                        href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i data-lucide="github" class="icon-s"></i> Исходный код
+                    </a>
+                    <a
+                        href="https://t.me/amnezia_vpn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i data-lucide="send" class="icon-s"></i> Telegram Chat
+                        (Amnezia)
+                    </a>
+                    <a
+                        href="https://github.com/amnezia-vpn/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                    >
+                        <i data-lucide="github" class="icon-s"></i> AmneziaVPN
+                        Organization
+                    </a>
+                </div>
+                <div class="footer-copy">
+                    AmneziaWG Architect &copy; 2026 | Инструмент для свободного
+                    интернета<br />
+                    Разработано с ❤️ для сообщества AmneziaVPN
+                </div>
+            </div>
+        </div>
+
+        <script>
+            lucide.createIcons();
+        </script>
+    </body>
+</html>
