@@ -896,23 +896,47 @@ function mkSIP(iv) {
     ">"
   );
 }
+/**
+ * Генерирует пакеты энтропии (I2-I5) с учетом выбранных пользователем тегов.
+ * Создает смесь из случайных данных, времени и счетчиков для обхода статистического анализа.
+ */
 function mkEntropy(idx, iv) {
-  var r = Math.min(rnd(10, 40) * iv, 300),
-    rc = rnd(4, 12);
-  var bStr = "";
+  var rLen = Math.min(rnd(10, 40) * iv, 300),
+    rcLen = rnd(4, 12),
+    rdLen = rnd(4, 8);
+
+  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
+
+  var tags = {
+    c: getT("useTagC") ? "<c>" : "",
+    t: getT("useTagT") ? "<t>" : "",
+    r: getT("useTagR") ? "<r " + rLen + ">" : "",
+    rc: getT("useTagRC") ? "<rc " + rcLen + ">" : "",
+    rd: getT("useTagRD") ? "<rd " + rdLen + ">" : "",
+    b: "",
+  };
+
   if (iv >= 2) {
-    var hexBytes = rnd(4, 8 * iv);
-    bStr = "<b 0x" + rh(hexBytes) + ">";
+    tags.b = "<b 0x" + rh(rnd(4, 8 * iv)) + ">";
   }
+
+  // Набор шаблонов для перемешивания тегов
   var p = [
-    bStr + "<r " + r + "><t><rc " + rc + "><c>",
-    "<c><t>" + bStr + "<r " + (r + 5) + "><rc " + (rc + 2) + ">",
-    "<rc " + rc + ">" + bStr + "<r " + r + "><c><t>",
-    "<t><r " + (r + 3) + "><c><rc " + rc + ">" + bStr,
-    "<r " + (r + 2) + "><rc " + (rc + 1) + ">" + bStr + "<t><c>",
+    tags.b + tags.r + tags.t + tags.rc + tags.c + tags.rd,
+    tags.c + tags.t + tags.b + tags.r + tags.rc + tags.rd,
+    tags.rc + tags.b + tags.r + tags.c + tags.t + tags.rd,
+    tags.t + tags.r + tags.c + tags.rc + tags.b + tags.rd,
+    tags.r + tags.rc + tags.b + tags.t + tags.c + tags.rd,
   ];
-  return p[(idx + rnd(0, 2)) % p.length];
+
+  var res = p[(idx + rnd(0, 4)) % p.length];
+  // Если все теги выключены, гарантируем хотя бы минимальный шум
+  return res || "<r 10>";
 }
+/**
+ * Главный распределитель для генерации первого пакета (I1).
+ * Вызывает специализированную функцию в зависимости от выбранного протокола мимикрии.
+ */
 function genI1(profile, iv) {
   var m = {
     quic_initial: function () {
@@ -945,6 +969,11 @@ function genI1(profile, iv) {
 }
 
 /* ── generate config ── */
+/**
+ * Основная функция сборки конфигурации.
+ * Рассчитывает все параметры (H1-H4, S1-S4, Junk, I1-I5) на основе
+ * выбранной версии протокола, интенсивности и истории неудачных попыток (iter).
+ */
 function genCfg() {
   var profile = document.getElementById("quicProfile").value;
   var jc = parseInt(document.getElementById("junkLevel").value);
@@ -1008,6 +1037,10 @@ var plabs = {
   random: "Random",
 };
 
+/**
+ * Отрисовывает сгенерированные параметры в таблицу на странице.
+ * Добавляет визуальные эффекты и пояснения к полям.
+ */
 function renderCfg(p) {
   var tbl = document.getElementById("configTable");
   tbl.classList.add("shimmer");
@@ -1096,6 +1129,7 @@ function renderCfg(p) {
   renderPrev(p);
 }
 
+/** Хелпер для создания HTML-секций в таблице параметров */
 function sec(label, rows) {
   var h = '<div class="psec"><div class="pseclabel">' + label + "</div>";
   rows.forEach(function (r, idx) {
@@ -1117,6 +1151,7 @@ function sec(label, rows) {
   return h + "</div>";
 }
 
+/** Экранирует HTML-символы для безопасного вывода CPS-строк */
 function esc(s) {
   return String(s)
     .replace(/&/g, "&amp;")
@@ -1124,6 +1159,7 @@ function esc(s) {
     .replace(/>/g, "&gt;");
 }
 
+/** Генерирует текстовый блок [Interface] для предпросмотра конфига */
 function renderPrev(p) {
   var lines = [];
   lines.push('<span class="cm"># AmneziaWG ' + ver + "</span>");
@@ -1184,6 +1220,7 @@ function renderPrev(p) {
   document.getElementById("previewCode").innerHTML = lines.join("\n");
 }
 
+/** Формирует финальный текст конфигурационного файла для копирования или скачивания */
 function getPlain(p) {
   var l = [
     "# AmneziaWG " + ver,
