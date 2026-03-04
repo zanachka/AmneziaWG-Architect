@@ -146,7 +146,6 @@
                                 <input
                                     type="checkbox"
                                     id="useTagC"
-                                    checked
                                     onchange="generate()"
                                 />
                                 &lt;c&gt; (Счетчик)
@@ -207,7 +206,147 @@
                                 тег <code>&lt;c&gt;</code> может вызывать
                                 <b>ErrorCode 1000</b> /
                                 <b>unknown tag &lt;c&gt;</b>. Если подключение
-                                не устанавливается — отключите его.
+                                не устанавливается — отключите его. Тег
+                                <code>&lt;c&gt;</code> по умолчанию
+                                <b>отключён</b>.
+                            </div>
+                        </div>
+
+                        <!-- Browser Fingerprint Block -->
+                        <div
+                            class="clabel"
+                            style="margin-top: 20px; margin-bottom: 10px"
+                        >
+                            <i
+                                data-lucide="fingerprint"
+                                class="icon-s"
+                                style="
+                                    vertical-align: middle;
+                                    margin-right: 4px;
+                                "
+                            ></i>
+                            Браузерный отпечаток:
+                        </div>
+                        <label class="check-label">
+                            <input
+                                type="checkbox"
+                                id="useBrowserFp"
+                                onchange="
+                                    toggleBrowserFp();
+                                    generate();
+                                "
+                            />
+                            Имитировать размеры пакетов под браузер
+                        </label>
+                        <div
+                            id="browserFpWrap"
+                            style="display: none; margin-top: 10px"
+                        >
+                            <select
+                                id="browserFpProfile"
+                                class="sel"
+                                onchange="
+                                    toggleYandexWarn();
+                                    generate();
+                                "
+                            >
+                                <option value="chrome">
+                                    Chrome — Initial: 1250, 0-RTT: 1250–1350
+                                </option>
+                                <option value="edge">
+                                    Edge — Initial: 1250, 0-RTT: 1250–1350
+                                </option>
+                                <option value="firefox">
+                                    Firefox — Initial: 1200–1252, RFC 9000
+                                </option>
+                                <option value="safari">
+                                    Safari — Initial: 1250–1252, iOS 15+
+                                </option>
+                                <option disabled>
+                                    ── Яндекс (нестабильно) ──
+                                </option>
+                                <option value="yandex_desktop">
+                                    ⚠ Яндекс Desktop — Initial: 1250, H3: 1350
+                                </option>
+                                <option value="yandex_mobile">
+                                    ⚠ Яндекс Mobile / Turbo — Initial: 1232, H3:
+                                    1350
+                                </option>
+                            </select>
+                            <div
+                                class="info-alert"
+                                style="margin-top: 10px; padding: 10px 14px"
+                            >
+                                <div class="info-alert-icon">
+                                    <i
+                                        data-lucide="info"
+                                        style="width: 14px; height: 14px"
+                                    ></i>
+                                </div>
+                                <div
+                                    class="info-alert-content"
+                                    style="font-size: 0.7rem"
+                                >
+                                    Padding применяется автоматически для
+                                    каждого протокола согласно реальным замерам:
+                                    <br /><br />
+                                    <b>QUIC Initial</b> — Chrome/Edge/Safari:
+                                    <b>1250 байт</b>, Firefox:
+                                    <b>1200–1252 байт</b> (RFC 9000 §14.1).<br />
+                                    <b>QUIC 0-RTT</b> — выравнивание по
+                                    Initial-границе либо до MTU
+                                    <b>~1350 байт</b>.<br />
+                                    <b>HTTP/3</b> — копирует Chrome QUIC:
+                                    хендшейк <b>1250</b>, DATA до
+                                    <b>1350 байт</b>.<br />
+                                    <b>TLS ClientHello</b> —
+                                    <b>512–800 байт</b>; Chrome выравнивает до
+                                    кратного <b>128</b>.<br />
+                                    <b>Noise_IK</b> — строго <b>148 байт</b> без
+                                    padding выдаёт себя; при включённом fp
+                                    добивается до <b>1200–1250 байт</b>.<br />
+                                    <b>DTLS (WebRTC)</b> — удерживается
+                                    <b>&lt; 1200 байт</b> во избежание
+                                    IP-фрагментации.
+                                </div>
+                            </div>
+                            <!-- Yandex unstable profile warning -->
+                            <div
+                                id="yandexFpWarn"
+                                class="info-alert"
+                                style="
+                                    display: none;
+                                    margin-top: 10px;
+                                    padding: 10px 14px;
+                                    border-left-color: #4a9eff;
+                                    background: rgba(74, 158, 255, 0.08);
+                                "
+                            >
+                                <div
+                                    class="info-alert-icon"
+                                    style="color: #4a9eff"
+                                >
+                                    <i
+                                        data-lucide="triangle-alert"
+                                        style="width: 14px; height: 14px"
+                                    ></i>
+                                </div>
+                                <div
+                                    class="info-alert-content"
+                                    style="font-size: 0.7rem"
+                                >
+                                    <b style="color: #4a9eff"
+                                        >Нестабильный профиль.</b
+                                    >
+                                    Параметры Яндекс Браузера получены
+                                    эмпирически и могут меняться между версиями.
+                                    Яндекс использует собственные сборки
+                                    Chromium с закрытыми оптимизациями —
+                                    точность мимикрии не гарантируется. По
+                                    возможности используйте
+                                    <b>Chrome</b>, <b>Firefox</b> или
+                                    <b>Safari</b>.
+                                </div>
                             </div>
                         </div>
 

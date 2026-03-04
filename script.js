@@ -741,28 +741,239 @@ function rRange(base, spread) {
  * Все части чётные по определению:
  *   hexPad(x, n) → 2n символов; rh(k) → 2k символов.
  */
+// ── Browser Fingerprint ───────────────────────────────────────────────────────
+
+/**
+ * Таблица реальных размеров UDP payload по браузерам и протоколам.
+ *
+ * Источники: RFC 9000 §14.1, Chromium quiche, исследования перехваченного трафика.
+ *
+ *   quicInitial  — QUIC Initial (Long Header 0xC0-0xC3)
+ *                  Chrome/Edge: 1250 (PADDING frame до фиксированного размера)
+ *                  Firefox:     1200–1252 (адаптируется, минимум RFC 9000)
+ *                  Safari:      1250 или 1252 (iOS 15+ измерения)
+ *
+ *   quic0rtt     — QUIC 0-RTT Early Data (Long Header 0xD0-0xD3)
+ *                  Зависит от данных; выравнивается по Initial-границе либо
+ *                  идёт на максимум MTU (~1350 байт для большого GET).
+ *
+ *   http3data    — HTTP/3 DATA после хендшейка
+ *                  Браузеры стремятся использовать MTU по максимуму: ~1350 байт
+ *                  (MTU 1500 − 20 IP − 8 UDP − ~122 QUIC/TLS overhead).
+ *
+ *   tls          — TLS 1.3 Client Hello ("голый" TLS поверх TCP)
+ *                  512–800 байт; Chrome выравнивает до кратного 128 байт.
+ *                  Внутри QUIC Initial этот фрейм всегда упакован в 1250-байтный пакет.
+ *
+ *   noise        — WireGuard Noise_IK Initiation
+ *                  Строго 148 байт без padding. Чтобы не выдать себя по размеру,
+ *                  при имитации браузерного трафика нужно добить до 1200–1250 байт.
+ *
+ *   dtls         — DTLS 1.2/1.3 Client Hello (WebRTC)
+ *                  Браузеры держат < 1200 байт чтобы избежать IP-фрагментации
+ *                  (DTLS плохо справляется с потерей фрагментов на хендшейке).
+ *
+ * Формат: [min, max] байт UDP payload (без UDP/IP заголовков).
+ */
+var BFP = {
+  //            quicInitial   quic0rtt      http3data     tls           noise         dtls
+  chrome: {
+    qi: [1250, 1250],
+    q0: [1250, 1350],
+    h3: [1250, 1350],
+    tls: [512, 800],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+  edge: {
+    qi: [1250, 1250],
+    q0: [1250, 1350],
+    h3: [1250, 1350],
+    tls: [512, 800],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+  firefox: {
+    qi: [1200, 1252],
+    q0: [1200, 1300],
+    h3: [1200, 1350],
+    tls: [512, 700],
+    nx: [1200, 1250],
+    dtls: [1050, 1200],
+  },
+  safari: {
+    qi: [1250, 1252],
+    q0: [1250, 1300],
+    h3: [1250, 1350],
+    tls: [512, 750],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+
+  // Яндекс Браузер — базируется на Chromium/quiche, но с оптимизациями для
+  // российской инфраструктуры и собственных сервисов (Поиск, Дзен, Видео).
+  //
+  // Два суб-профиля, управляемых через yandexStyle:
+  //
+  //   "desktop" — поведение десктопного Яндекс Браузера.
+  //               QUIC Initial жёстко 1250 байт (как актуальный Chromium).
+  //               DATA-пакеты HTTP/3 стремятся к максимуму MTU: 1350 байт —
+  //               плотный PADDING для маскировки структуры запросов к API Яндекса.
+  //
+  //   "mobile"  — мобильный Яндекс Браузер / Turbo-прокси режим.
+  //               Более агрессивная защита от фрагментации в нестабильных сетях.
+  //               QUIC Initial: 1232 байт (стандартное значение при ограниченном MTU,
+  //               кратно 16 — удобно для AES и выравнивания QUIC Packet Number).
+  //               0-RTT и DATA: 1250–1350 байт.
+  //
+  // ⚠ НЕСТАБИЛЬНЫЙ ПРОФИЛЬ: Параметры получены эмпирически и могут меняться
+  //   между версиями браузера. Используйте Chrome/Firefox при возможности.
+  yandex_desktop: {
+    qi: [1250, 1250],
+    q0: [1250, 1350],
+    h3: [1350, 1350],
+    tls: [512, 800],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+  yandex_mobile: {
+    qi: [1232, 1232],
+    q0: [1250, 1350],
+    h3: [1350, 1350],
+    tls: [512, 800],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+};
+
+/**
+ * YANDEX_UNSTABLE_PROFILES — профили, помеченные как нестабильные.
+ * Используется в UI для отображения предупреждения.
+ */
+var YANDEX_UNSTABLE_PROFILES = ["yandex_desktop", "yandex_mobile"];
+
+/** toggleBrowserFp — показывает/скрывает блок выбора браузера. */
+function toggleBrowserFp() {
+  var cbx = document.getElementById("useBrowserFp");
+  var wrap = document.getElementById("browserFpWrap");
+  if (wrap) wrap.style.display = cbx && cbx.checked ? "block" : "none";
+  toggleYandexWarn();
+}
+
+/**
+ * toggleYandexWarn — показывает синее предупреждение если выбран
+ * нестабильный профиль Яндекс Браузера.
+ */
+function toggleYandexWarn() {
+  var el = document.getElementById("browserFpProfile");
+  var warn = document.getElementById("yandexFpWarn");
+  if (!warn) return;
+  var isYandex = el && YANDEX_UNSTABLE_PROFILES.indexOf(el.value) !== -1;
+  var fpActive = (function () {
+    var cbx = document.getElementById("useBrowserFp");
+    return cbx && cbx.checked;
+  })();
+  warn.style.display = isYandex && fpActive ? "flex" : "none";
+}
+
+/** getBrowserFpProfile — активный профиль или "" если отключён. */
+function getBrowserFpProfile() {
+  var cbx = document.getElementById("useBrowserFp");
+  if (!cbx || !cbx.checked) return "";
+  var el = document.getElementById("browserFpProfile");
+  return el ? el.value : "";
+}
+
+/**
+ * getFpRange(slot) — возвращает [min, max] байт для текущего профиля и слота.
+ * slot: "qi" | "q0" | "h3" | "tls" | "nx" | "dtls"
+ * Если fp отключён — возвращает null.
+ */
+function getFpRange(slot) {
+  var profile = getBrowserFpProfile();
+  return (BFP[profile] && BFP[profile][slot]) || null;
+}
+
+/**
+ * calcPadding(headerB, extraB, range, iv) — вычисляет размер <r N> padding.
+ *
+ *   headerB — байты уже занятые тегом <b 0x...>
+ *   extraB  — байты от других тегов с фиксированной длиной (например <rc N>)
+ *   range   — [min, max] из BFP или null
+ *   iv      — intensity multiplier (fallback)
+ *
+ * Если range задан: добивает occupied до min, с jitter до max.
+ * Если range null: обычный энтропийный размер.
+ */
+function calcPadding(headerB, extraB, range, iv) {
+  var occupied = headerB + extraB;
+  if (!range) return Math.min(rnd(20, 80) * iv, 500);
+
+  var min = range[0],
+    max = range[1];
+  var needed = Math.max(0, min - occupied);
+  // jitter в пределах диапазона, но не выходить за max
+  var jitter = Math.max(0, Math.min(max - min, max - occupied - needed, 20));
+  return needed + (jitter > 0 ? rnd(0, jitter) : 0);
+}
+
+/**
+ * alignTo128(n) — выравнивает размер TLS ClientHello до кратного 128 байт,
+ * как это делает Chrome для скрытия набора расширений.
+ */
+function alignTo128(n) {
+  return Math.ceil(n / 128) * 128;
+}
+
+/** getT(id) — читает состояние чекбокса тега. */
+function getT(id) {
+  return (document.getElementById(id) || { checked: true }).checked;
+}
+
+// ── Protocol generators ───────────────────────────────────────────────────────
+
+/**
+ * mkQUICi — QUIC Initial (RFC 9000, Long Header 0xC0-0xC3)
+ *
+ * Long Header layout (фиксированные поля):
+ *   1B  flags       0xC0 | version_bits
+ *   4B  version     0x00000001
+ *   1B  dcid_len    (8–20)
+ *   N   dcid
+ *   1B  scid_len    (0–20)
+ *   M   scid
+ *   1B  token_len   (0 или 8–32)
+ *   K   token
+ *   4B  reserved/PN
+ *
+ * Браузерный padding (RFC 9000 §14.1):
+ *   Chrome/Edge → 1250 байт фиксированно
+ *   Firefox     → 1200–1252 байт (адаптивный)
+ *   Safari      → 1250–1252 байт
+ */
 function mkQUICi(iv) {
   var host = getHost("quic_initial");
   var dcid = rnd(8, 20);
   var scid = rnd(0, 20);
   var tokenLen = rnd(0, 1) === 0 ? 0 : rnd(8, 32);
   var sniRc = Math.min(host.length + rnd(0, 6), 64);
-  var rLen = Math.min(rnd(20, 80) * iv, 500);
-
-  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
 
   var hex = assertEvenHex(
-    hexPad(0xc0 | rnd(0, 3), 1) + // 1B flags
-      "00000001" + // 4B version
-      hexPad(dcid, 1) + // 1B DCID length
-      rh(dcid) + // N bytes DCID
-      hexPad(scid, 1) + // 1B SCID length
-      rh(scid) + // N bytes SCID
-      hexPad(tokenLen, 1) + // 1B token length
-      rh(tokenLen) + // N bytes token
-      rh(4), // 4B reserved/PN
+    hexPad(0xc0 | rnd(0, 3), 1) + // 1B  flags
+      "00000001" + // 4B  version = 1
+      hexPad(dcid, 1) + // 1B  DCID length
+      rh(dcid) + // N   DCID
+      hexPad(scid, 1) + // 1B  SCID length
+      rh(scid) + // M   SCID
+      hexPad(tokenLen, 1) + // 1B  token length
+      rh(tokenLen) + // K   token
+      rh(4), // 4B  reserved / Packet Number
     "mkQUICi",
   );
+
+  var headerB = hex.length / 2;
+  var extraB = getT("useTagRC") ? sniRc : 0;
+  var pad = calcPadding(headerB, extraB, getFpRange("qi"), iv);
 
   return (
     "<b 0x" +
@@ -771,68 +982,94 @@ function mkQUICi(iv) {
     (getT("useTagRC") ? "<rc " + sniRc + ">" : "") +
     (getT("useTagC") ? "<c>" : "") +
     (getT("useTagT") ? "<t>" : "") +
-    (getT("useTagR") ? "<r " + rLen + ">" : "")
+    (getT("useTagR") ? "<r " + pad + ">" : "")
   );
 }
 
 /**
- * mkQUIC0 — QUIC 0-RTT (Long Header 0xD0-0xD3)
+ * mkQUIC0 — QUIC 0-RTT Early Data (Long Header 0xD0-0xD3)
+ *
+ * Размер вариативен: зависит от данных запроса (обычно GET + заголовки).
+ * Браузеры выравнивают по той же 1250-байтной границе, что и Initial,
+ * или идут до ~1350 байт при большом запросе (ближе к MTU).
+ *
+ * Layout аналогичен Initial, но flags = 0xD0–0xD3.
+ * ticketHint в <rc> имитирует TLS session-ticket hint (ASCII).
  */
 function mkQUIC0(iv) {
   var host = getHost("quic_0rtt");
   var dcid = rnd(8, 20);
   var scid = rnd(0, 20);
   var ticketHint = Math.min(host.length + rnd(4, 16), 48);
-  var rLen = Math.min(rnd(30, 120) * iv, 600);
-
-  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
 
   var hex = assertEvenHex(
-    hexPad(0xd0 | rnd(0, 3), 1) +
-      "00000001" +
-      hexPad(dcid, 1) +
-      rh(dcid) +
-      hexPad(scid, 1) +
-      rh(scid) +
-      rh(4),
+    hexPad(0xd0 | rnd(0, 3), 1) + // 1B  flags (0-RTT type)
+      "00000001" + // 4B  version = 1
+      hexPad(dcid, 1) + // 1B  DCID length
+      rh(dcid) + // N   DCID
+      hexPad(scid, 1) + // 1B  SCID length
+      rh(scid) + // M   SCID
+      rh(4), // 4B  reserved / Packet Number
     "mkQUIC0",
   );
+
+  var headerB = hex.length / 2;
+  var extraB = getT("useTagRC") ? ticketHint : 0;
+  var pad = calcPadding(headerB, extraB, getFpRange("q0"), iv);
 
   return (
     "<b 0x" +
     hex +
     ">" +
     (getT("useTagT") ? "<t>" : "") +
-    (getT("useTagR") ? "<r " + rLen + ">" : "") +
+    (getT("useTagR") ? "<r " + pad + ">" : "") +
     (getT("useTagRC") ? "<rc " + ticketHint + ">" : "") +
     (getT("useTagC") ? "<c>" : "")
   );
 }
 
 /**
- * mkTLS — TLS 1.3 Client Hello
+ * mkTLS — TLS 1.3 Client Hello (поверх TCP или внутри QUIC Initial)
  *
- * TLS Record: 16 03 01 [2B recLen] 01 [3B hsLen] 03 03 [32B random]
+ * TLS Record layout:
+ *   1B  content_type   0x16 (Handshake)
+ *   2B  legacy_version 0x0301
+ *   2B  record_length  (300–550)
+ *   1B  hs_type        0x01 (ClientHello)
+ *   3B  hs_length      (record_length − 4..9)
+ *   2B  client_version 0x0303 (TLS 1.2 legacy field)
+ *  32B  client_random
  *
- * Все числовые поля через hexPad — гарантированно чётные.
+ * Размер "голого" TLS: 512–800 байт.
+ * Chrome выравнивает итоговый ClientHello до кратного 128 байт (padding ext 0x0015).
+ * Внутри QUIC Initial этот TLS-фрейм упакован в пакет 1250 байт.
+ *
+ * BFP-диапазон "tls" применяется только если fp включён.
  */
 function mkTLS(iv) {
   var host = getHost("tls_client_hello");
-  var recLen = rnd(300, 550);
-  var hsLen = recLen - rnd(4, 9);
-  var sniExt = 2 + 2 + 2 + 1 + 2 + host.length;
+  var sniExt = 2 + 2 + 2 + 1 + 2 + host.length; // SNI extension size estimate
   var sniRc = Math.min(sniExt, 64);
+
+  // record length: выбираем базу, затем выравниваем до 128 если активен
+  // Chromium-based профиль (Chrome, Edge, Яндекс) — как делает quiche.
+  var fpRange = getFpRange("tls");
+  var baseLen = fpRange ? rnd(fpRange[0], fpRange[1]) : rnd(300, 550);
+  var chromiumLike = ["chrome", "edge", "yandex_desktop", "yandex_mobile"];
+  var recLen =
+    chromiumLike.indexOf(getBrowserFpProfile()) !== -1
+      ? alignTo128(baseLen)
+      : baseLen;
+  var hsLen = recLen - rnd(4, 9);
   var rLen = Math.min(rnd(20, 60) * iv, 300);
 
-  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
-
   var hex = assertEvenHex(
-    "160301" + // 3B: record type + legacy version
-      hexPad(recLen, 2) + // 2B: record length
-      "01" + // 1B: handshake type = ClientHello
-      hexPad(hsLen, 3) + // 3B: handshake length
-      "0303" + // 2B: client_version (TLS 1.2 legacy)
-      rh(32), // 32B: client random
+    "160301" + // 3B  record type (0x16) + legacy version (0x0301)
+      hexPad(recLen, 2) + // 2B  record length
+      "01" + // 1B  handshake type = ClientHello
+      hexPad(hsLen, 3) + // 3B  handshake length
+      "0303" + // 2B  client_version (TLS 1.2 legacy)
+      rh(32), // 32B client random
     "mkTLS",
   );
 
@@ -849,65 +1086,99 @@ function mkTLS(iv) {
 
 /**
  * mkNoise — WireGuard Noise_IK Handshake Initiation
- * Разбит на несколько <b> тегов для удобства отображения.
- * rh(n) всегда чётный — каждый тег корректен.
+ *
+ * Структура пакета (строго 148 байт без padding):
+ *   4B  message_type + reserved   0x01000000
+ *   4B  sender_index              (random)
+ *  32B  ephemeral public key      (random)
+ *  48B  encrypted static key      (random, Poly1305-тег включён)
+ *  28B  encrypted timestamp       (random, Poly1305-тег включён)
+ *  16B  MAC1
+ *  16B  MAC2
+ *   = 148 байт
+ *
+ * DPI легко идентифицирует Noise по фиксированному размеру 148 байт.
+ * При включённом браузерном fp добиваем до 1200–1250 байт через <r N>,
+ * имитируя QUIC-обёртку.
  */
 function mkNoise(iv) {
-  var rLen = Math.min(rnd(10, 40) * iv, 200);
   var rcLen = rnd(4, 12);
-  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
+
+  // Noise_IK Initiation: 4 поля, итого 4+4+32+48+28 = 116 байт в <b> тегах
+  // (MAC1 + MAC2 = ещё 32 байта — добавляем отдельным <b>)
+  var headerB = 4 + 4 + 32 + 48 + 28 + 32; // = 148
+
+  var extraB = getT("useTagRC") ? rcLen : 0;
+  var range = getFpRange("nx");
+  var pad = range
+    ? calcPadding(headerB, extraB, range, iv)
+    : Math.min(rnd(10, 40) * iv, 200);
 
   return (
     "<b 0x01000000" +
     rh(4) +
-    ">" + // type(1) + reserved(3) + sender_index(4)
+    ">" + // 4B type=1 + 3B reserved + 4B sender_index
     "<b 0x" +
     rh(32) +
-    ">" + // ephemeral public key
+    ">" + // 32B ephemeral public key
     "<b 0x" +
     rh(48) +
-    ">" + // encrypted static
+    ">" + // 48B encrypted static  (32B key + 16B tag)
     "<b 0x" +
     rh(28) +
-    ">" + // encrypted timestamp
-    (getT("useTagR") ? "<r " + rLen + ">" : "") +
+    ">" + // 28B encrypted timestamp (12B ts + 16B tag)
+    "<b 0x" +
+    rh(32) +
+    ">" + // 32B MAC1 + MAC2
+    (getT("useTagR") ? "<r " + pad + ">" : "") +
     (getT("useTagT") ? "<t>" : "") +
     (getT("useTagRC") ? "<rc " + rcLen + ">" : "")
   );
 }
 
 /**
- * mkDTLS — DTLS 1.2 Client Hello
+ * mkDTLS — DTLS 1.2 Client Hello (WebRTC)
  *
- * DTLS Record:
- *   1B content_type | 2B version=0xFEFD | 2B epoch | 6B seq_num
- *   | 2B length | 1B hs_type | 3B hs_len | 2B msg_seq | 3B frag_offset
- *   | 3B frag_len | 2B dtls_version | 4B epoch+rnd | 32B random
+ * DTLS Record layout:
+ *   1B  content_type   0x16 (Handshake)
+ *   2B  version        0xFEFD (DTLS 1.2)
+ *   2B  epoch          (0–255, hexPad гарантирует 4 символа)
+ *   6B  sequence_number
+ *   2B  fragment_length
+ *   1B  hs_type        0x01 (ClientHello)
+ *   3B  hs_length + 2B msg_seq + 1B pad
+ *   2B  dtls_version   0xFEFD
+ *   2B  cookie_length  0x0000
+ *   4B  random prefix
+ *  32B  random
  *
- * epoch через hexPad(epoch, 2) = ровно 4 hex-символа.
+ * Браузеры держат ClientHello < 1200 байт чтобы исключить IP-фрагментацию:
+ * DTLS не умеет переcобирать фрагменты на этапе хендшейка.
+ * BFP-диапазон "dtls": 1050–1200 байт.
  */
 function mkDTLS(iv) {
   var host = getHost("dtls");
   var fragLen = rnd(100, 300);
   var sniRc = Math.min(host.length + rnd(2, 8), 60);
   var epoch = rnd(0, 255);
-  var rLen = Math.min(rnd(15, 50) * iv, 250);
-
-  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
 
   var hex = assertEvenHex(
-    "16" + // 1B: content_type = Handshake
-      "fefd" + // 2B: version = DTLS 1.2
-      hexPad(epoch, 2) + // 2B: epoch  ← hexPad гарантирует 4 символа
-      rh(6) + // 6B: sequence number
-      hexPad(fragLen, 2) + // 2B: fragment length
-      "01" + // 1B: handshake type = ClientHello
+    "16" + // 1B  content_type = Handshake
+      "fefd" + // 2B  version = DTLS 1.2
+      hexPad(epoch, 2) + // 2B  epoch (hexPad → ровно 4 hex-символа)
+      rh(6) + // 6B  sequence number
+      hexPad(fragLen, 2) + // 2B  fragment length
+      "01" + // 1B  hs_type = ClientHello
       rh(6) + // 3B hs_len + 2B msg_seq + 1B pad
       "fefd0000" + // 2B dtls_version + 2B cookie_len
-      rh(4) + // 4B random prefix
+      rh(4) + // 4B  random prefix
       rh(32), // 32B random
     "mkDTLS",
   );
+
+  var headerB = hex.length / 2;
+  var extraB = getT("useTagRC") ? sniRc : 0;
+  var pad = calcPadding(headerB, extraB, getFpRange("dtls"), iv);
 
   return (
     "<b 0x" +
@@ -916,12 +1187,19 @@ function mkDTLS(iv) {
     (getT("useTagRC") ? "<rc " + sniRc + ">" : "") +
     (getT("useTagC") ? "<c>" : "") +
     (getT("useTagT") ? "<t>" : "") +
-    (getT("useTagR") ? "<r " + rLen + ">" : "")
+    (getT("useTagR") ? "<r " + pad + ">" : "")
   );
 }
 
 /**
- * mkHTTP3 — HTTP/3 over QUIC (QUIC Long Header с расширенным набором типов)
+ * mkHTTP3 — HTTP/3 Host Mimicry (QUIC Long Header, расширенный набор типов)
+ *
+ * Стратегия: копируем поведение Chrome QUIC.
+ *   - Хендшейк (Initial/0-RTT): 1250 байт
+ *   - DATA пакеты после хендшейка: до MTU ~1350 байт
+ *
+ * Используем расширенный набор type-байт (0xC0-0xC3, 0xE0-0xE2) для большего
+ * разнообразия — часть из них соответствует QUIC v2 и черновым расширениям.
  */
 function mkHTTP3(iv) {
   var host = getHost("quic_initial");
@@ -929,40 +1207,46 @@ function mkHTTP3(iv) {
   var dcid = rnd(8, 20);
   var scid = rnd(0, 20);
   var sniLen = Math.min(host.length + 9 + rnd(0, 6), 64);
-  var rLen = Math.min(rnd(30, 100) * iv, 500);
-
-  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
 
   var hex = assertEvenHex(
-    hexPad(ptypes[rnd(0, ptypes.length - 1)], 1) +
-      "00000001" +
-      hexPad(dcid, 1) +
-      rh(dcid) +
-      hexPad(scid, 1) +
-      rh(scid) +
-      rh(4),
+    hexPad(ptypes[rnd(0, ptypes.length - 1)], 1) + // 1B  flags (QUIC Long Header variant)
+      "00000001" + // 4B  version = 1
+      hexPad(dcid, 1) + // 1B  DCID length
+      rh(dcid) + // N   DCID
+      hexPad(scid, 1) + // 1B  SCID length
+      rh(scid) + // M   SCID
+      rh(4), // 4B  reserved / Packet Number
     "mkHTTP3",
   );
+
+  var headerB = hex.length / 2;
+  var extraB = getT("useTagRC") ? sniLen : 0;
+  // HTTP/3 DATA после хендшейка стремится к MTU: используем слот h3 (1250–1350)
+  var pad = calcPadding(headerB, extraB, getFpRange("h3"), iv);
 
   return (
     "<b 0x" +
     hex +
     ">" +
     (getT("useTagRC") ? "<rc " + sniLen + ">" : "") +
-    (getT("useTagR") ? "<r " + rLen + ">" : "") +
+    (getT("useTagR") ? "<r " + pad + ">" : "") +
     (getT("useTagC") ? "<c>" : "") +
     (getT("useTagT") ? "<t>" : "")
   );
 }
 
 /**
- * mkSIP — SIP REGISTER request
+ * mkSIP — SIP REGISTER request (VoIP Signaling)
  *
- * ASCII "REGISTER sip:" = 13 символов = 26 hex (чётное).
- * hostHex: каждый ASCII-символ → 2 hex (всегда чётное).
- * " " (0x20) = 2 hex-символа.
- * rh(4) = 8 hex-символов.
- * Итого: гарантированно чётное.
+ * "REGISTER sip:<host> " в hex-форме:
+ *   "REGISTER sip:" = 13 ASCII-байт = 26 hex (чётное)
+ *   hostHex         = host.length * 2 hex (чётное — каждый ASCII → 2 hex)
+ *   " " (0x20)      = 2 hex
+ *   rh(4)           = 8 hex
+ *   Итого: гарантированно чётное.
+ *
+ * SIP — специфичный VoIP-протокол, не браузерный.
+ * BFP не применяется; используем умеренный энтропийный размер.
  */
 function mkSIP(iv) {
   var host = getHost("sip");
@@ -974,15 +1258,13 @@ function mkSIP(iv) {
     "524547495354455220736970" + // "REGISTER sip"
       "3a" + // ":"
       hostHex + // host as ASCII hex
-      "20" + // " "
+      "20" + // " " (SP)
       rh(4), // 4B random suffix
     "mkSIP",
   );
 
   var rcVal = Math.min(host.length + rnd(8, 24) * iv, 150);
   var rLen = Math.min(rnd(5, 30) * iv, 120);
-
-  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
 
   return (
     "<b 0x" +
@@ -1003,8 +1285,6 @@ function mkEntropy(idx, iv) {
   var rLen = Math.min(rnd(10, 40) * iv, 300),
     rcLen = rnd(4, 12),
     rdLen = rnd(4, 8);
-
-  var getT = (id) => (document.getElementById(id) || { checked: true }).checked;
 
   var tags = {
     c: getT("useTagC") ? "<c>" : "",
@@ -1034,7 +1314,7 @@ function mkEntropy(idx, iv) {
 }
 
 /**
- * Главный распределитель для генерации первого пакета (I1).
+ * genI1 — главный распределитель для генерации первого пакета (I1).
  * Вызывает специализированную функцию в зависимости от выбранного протокола мимикрии.
  */
 function genI1(profile, iv) {
