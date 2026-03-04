@@ -32,6 +32,7 @@ jobs:
 
           cp about.html site/
           cp -r assets/ site/assets/
+          cp -r api/ site/api/
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
