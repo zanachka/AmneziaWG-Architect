@@ -18,6 +18,22 @@
 
 ---
 
+![Github Preview banner](assets/github-preview.png)
+
+## Интерфейс
+
+<div align="center">
+  <h3>Desktop Version</h3>
+  <img src="assets/preview-desktop.png" width="900" alt="Desktop Preview">
+  
+  <br/>
+  
+  <h3>Mobile Version</h3>
+  <img src="assets/preview-mobile.png" width="300" alt="Mobile Preview">
+</div>
+
+---
+
 ## Что это
 
 **AmneziaWG Architect** — статический веб-инструмент для генерации параметров обфускации AmneziaWG: заголовков (H1–H4), размерных префиксов (S1–S4), junk-поездов (Jc/Jmin/Jmax) и цепочек CPS-сигнатур (I1–I5), имитирующих реальные протоколы (QUIC, TLS 1.3, HTTP/3, DTLS, SIP, WireGuard Noise_IK).
