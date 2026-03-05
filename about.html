@@ -21,6 +21,7 @@
             rel="stylesheet"
         />
 
+        <link rel="stylesheet" href="assets/main.css" />
         <link rel="stylesheet" href="assets/style.css" />
         <link rel="stylesheet" href="assets/about.style.css" />
 
@@ -43,17 +44,56 @@
         <link rel="manifest" href="assets/site.webmanifest" />
     </head>
     <body>
-        <div class="noise"></div>
+        <div class="bg-fx">
+            <div class="noise"></div>
+            <div class="glow-1"></div>
+            <div class="glow-2"></div>
+            <div class="glow-3"></div>
+        </div>
+
+        <!-- Top Navigation -->
+        <nav class="top-nav fade-in">
+            <div class="nav-container">
+                <a href="index.html" class="nav-logo">
+                    <i data-lucide="cpu" class="icon-m"></i> AWG
+                    <span>ARCHITECT</span>
+                </a>
+                <div class="nav-links" id="navLinks">
+                    <a href="index.html" class="nav-link"
+                        ><i data-lucide="home" class="icon-s"></i> Генератор</a
+                    >
+                    <a href="mergekeys.html" class="nav-link"
+                        ><i data-lucide="combine" class="icon-s"></i>
+                        MergeKeys</a
+                    >
+                    <a href="about.html" class="nav-link"
+                        ><i data-lucide="info" class="icon-s"></i> О проекте</a
+                    >
+                    <a
+                        href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+                        target="_blank"
+                        class="nav-link nav-github"
+                        title="GitHub"
+                        ><i data-lucide="github" class="icon-s"></i
+                    ></a>
+                </div>
+                <button
+                    class="nav-mobile-btn"
+                    onclick="
+                        document
+                            .getElementById('navLinks')
+                            .classList.toggle('show')
+                    "
+                >
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </nav>
 
         <div class="about-wrap fade-in">
-            <a href="index.html" class="back-link">
-                <i data-lucide="arrow-left" style="width: 16px"></i> Вернуться к
-                генератору
-            </a>
-
             <div class="hero-slogan">
                 Твой протокол — твои правила.<br />
-                <span>Невидимость по стандарту.</span>
+                <span class="hero-outline">Невидимость по стандарту.</span>
             </div>
 
             <div class="section a1">
@@ -61,9 +101,10 @@
                 <p>
                     <span class="highlight">AmneziaWG Architect</span> — это
                     продвинутый веб-инструмент для создания уникальных профилей
-                    обфускации протокола <b>AmneziaWG</b>. Если обычный VPN
-                    просто шифрует данные, то Architect помогает «замаскировать»
-                    сам факт использования VPN.
+                    обфускации протокола <b>AmneziaWG</b>, а также для работы с
+                    ключами Amnezia VPN. Если обычный VPN просто шифрует данные,
+                    то Architect помогает «замаскировать» сам факт использования
+                    VPN.
                 </p>
                 <p>
                     В современных реалиях системы анализа трафика (DPI) могут
@@ -143,6 +184,70 @@
             </div>
 
             <div class="section a4">
+                <h2>
+                    <i data-lucide="combine"></i> MergeKeys — управление ключами
+                </h2>
+                <p>
+                    Помимо генератора обфускации, Architect включает модуль
+                    <span class="highlight">MergeKeys</span> — мощный инструмент
+                    для работы с ключами Amnezia VPN формата
+                    <code>vpn://</code>.
+                </p>
+                <ul class="feature-list">
+                    <li>
+                        <i data-lucide="zap"></i>
+                        <span>
+                            <b>Обновление обфускации:</b> Сгенерировали новые
+                            параметры Jc, Jmin, Jmax, I1–I5? MergeKeys позволяет
+                            применить их к вашему существующему ключу без
+                            пересоздания — обновляются только клиентские
+                            параметры, серверные остаются нетронутыми.
+                        </span>
+                    </li>
+                    <li>
+                        <i data-lucide="git-merge"></i>
+                        <span>
+                            <b>Объединение ключей:</b> Соберите несколько
+                            контейнеров (AWG, XRay, OpenVPN и др.) из разных
+                            <code>vpn://</code> ключей в один мастер-ключ.
+                            Дубликаты автоматически обнаруживаются и
+                            пропускаются.
+                        </span>
+                    </li>
+                    <li>
+                        <i data-lucide="shield-check"></i>
+                        <span>
+                            <b>Безопасность:</b> Все операции выполняются
+                            исключительно в браузере. Ваши ключи не отправляются
+                            на сервер — декодирование, патчинг и кодирование
+                            <code>vpn://</code>
+                            происходит локально через JavaScript (pako/zlib).
+                        </span>
+                    </li>
+                </ul>
+                <div
+                    style="
+                        margin-top: 20px;
+                        display: flex;
+                        gap: 12px;
+                        flex-wrap: wrap;
+                    "
+                >
+                    <a href="mergekeys.html" class="about-cta-btn">
+                        <i data-lucide="arrow-right" class="icon-s"></i>
+                        Перейти к MergeKeys
+                    </a>
+                    <a
+                        href="mergekeys.html?tab=merge"
+                        class="about-cta-btn about-cta-sec"
+                    >
+                        <i data-lucide="git-merge" class="icon-s"></i>
+                        Объединить ключи
+                    </a>
+                </div>
+            </div>
+
+            <div class="section a5">
                 <h2><i data-lucide="lock"></i> Полная приватность</h2>
                 <p>Проект работает по принципу <b>Zero-Data</b>:</p>
                 <ul class="feature-list">
@@ -151,7 +256,8 @@
                         <span>
                             <b>Client-Side:</b> Весь код выполняется в вашем
                             браузере. Никакие данные не отправляются на сервер,
-                            у нас нет базы данных и аналитики.
+                            у нас нет базы данных и аналитики. Это касается как
+                            генератора обфускации, так и MergeKeys.
                         </span>
                     </li>
                     <li>
@@ -159,48 +265,115 @@
                         <span>
                             <b>Offline Ready:</b> Вы можете сохранить эту
                             страницу и пользоваться ей без доступа к интернету —
-                            логика генерации останется доступной.
+                            логика генерации и работы с ключами останется
+                            доступной.
                         </span>
                     </li>
                 </ul>
             </div>
 
             <!-- Footer -->
-            <div class="footer">
-                <div class="footer-slogan">
-                    AmneziaWG Architect — Спроектировано для свободы.
+            <footer class="main-footer">
+                <div class="main-footer-inner">
+                    <!-- Slogan -->
+                    <div class="footer-slogan">
+                        Шифруем реальность.
+                        <span class="slogan-accent slogan-glow"
+                            >Архитектура свободы</span
+                        >
+                        — в каждом пакете.
+                    </div>
+
+                    <!-- Links Grid -->
+                    <div class="footer-grid">
+                        <a
+                            href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="footer-grid-link"
+                        >
+                            <i data-lucide="github" class="icon-m"></i>
+                            <div class="fgl-content">
+                                <span class="fgl-title">Исходный код</span>
+                                <span class="fgl-desc"
+                                    >AmneziaWG-Architect на GitHub</span
+                                >
+                            </div>
+                        </a>
+                        <a
+                            href="https://github.com/Vadim-Khristenko/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="footer-grid-link"
+                        >
+                            <i data-lucide="user" class="icon-m"></i>
+                            <div class="fgl-content">
+                                <span class="fgl-title">Автор проекта</span>
+                                <span class="fgl-desc">Vadim-Khristenko</span>
+                            </div>
+                        </a>
+                        <a
+                            href="https://t.me/amnezia_vpn"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="footer-grid-link"
+                        >
+                            <i data-lucide="send" class="icon-m"></i>
+                            <div class="fgl-content">
+                                <span class="fgl-title">Amnezia VPN Чат</span>
+                                <span class="fgl-desc"
+                                    >Сообщество в Telegram</span
+                                >
+                            </div>
+                        </a>
+                        <a
+                            href="https://github.com/amnezia-vpn/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="footer-grid-link"
+                        >
+                            <i data-lucide="shield" class="icon-m"></i>
+                            <div class="fgl-content">
+                                <span class="fgl-title">Amnezia VPN</span>
+                                <span class="fgl-desc">Официальный GitHub</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="footer-divider"></div>
+
+                    <!-- Credits — VoidWaifu -->
+                    <div class="footer-credits">
+                        <div class="footer-credits-label">
+                            Вдохновение и исследования
+                        </div>
+                        <div class="footer-credits-text">
+                            Основано на идеях и исследованиях из
+                            <a
+                                href="https://voidwaifu.github.io/Special-Junk-Packet-List/"
+                                target="_blank"
+                                >Special Junk Packet List</a
+                            >
+                            и вдохновлено работой
+                            <a
+                                href="https://github.com/VoidWaifu"
+                                target="_blank"
+                                >@VoidWaifu</a
+                            >
+                        </div>
+                    </div>
+
+                    <div class="footer-divider"></div>
+
+                    <!-- Copyright -->
+                    <div class="footer-copy">
+                        <span class="copy-brand">AmneziaWG Architect</span>
+                        &copy; 2026 — Инструмент для свободного интернета<br />
+                        Разработано с <span class="copy-heart">❤️</span> для
+                        сообщества AmneziaVPN
+                    </div>
                 </div>
-                <div class="footer-links">
-                    <a
-                        href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <i data-lucide="github" class="icon-s"></i> Исходный код
-                    </a>
-                    <a
-                        href="https://t.me/amnezia_vpn"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <i data-lucide="send" class="icon-s"></i> Telegram Chat
-                        (Amnezia)
-                    </a>
-                    <a
-                        href="https://github.com/amnezia-vpn/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <i data-lucide="github" class="icon-s"></i> AmneziaVPN
-                        Organization
-                    </a>
-                </div>
-                <div class="footer-copy">
-                    AmneziaWG Architect &copy; 2026 | Инструмент для свободного
-                    интернета<br />
-                    Разработано с ❤️ для сообщества AmneziaVPN
-                </div>
-            </div>
+            </footer>
         </div>
 
         <script>

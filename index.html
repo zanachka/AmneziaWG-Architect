@@ -37,12 +37,57 @@
             href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Unbounded:wght@300;500;700;900&family=Manrope:wght@300;400;500;600&display=swap"
             rel="stylesheet"
         />
+        <link rel="stylesheet" href="assets/main.css" />
         <link rel="stylesheet" href="assets/style.css" />
         <!-- Lucide Icons CDN -->
         <script src="https://unpkg.com/lucide@latest"></script>
     </head>
     <body>
-        <div class="noise"></div>
+        <div class="bg-fx">
+            <div class="noise"></div>
+            <div class="glow-1"></div>
+            <div class="glow-2"></div>
+            <div class="glow-3"></div>
+        </div>
+
+        <!-- Top Navigation -->
+        <nav class="top-nav fade-in">
+            <div class="nav-container">
+                <a href="index.html" class="nav-logo">
+                    <i data-lucide="cpu" class="icon-m"></i> AWG
+                    <span>ARCHITECT</span>
+                </a>
+                <div class="nav-links" id="navLinks">
+                    <a href="index.html" class="nav-link"
+                        ><i data-lucide="home" class="icon-s"></i> Генератор</a
+                    >
+                    <a href="mergekeys.html" class="nav-link"
+                        ><i data-lucide="combine" class="icon-s"></i>
+                        MergeKeys</a
+                    >
+                    <a href="about.html" class="nav-link"
+                        ><i data-lucide="info" class="icon-s"></i> О проекте</a
+                    >
+                    <a
+                        href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+                        target="_blank"
+                        class="nav-link nav-github"
+                        title="GitHub"
+                        ><i data-lucide="github" class="icon-s"></i
+                    ></a>
+                </div>
+                <button
+                    class="nav-mobile-btn"
+                    onclick="
+                        document
+                            .getElementById('navLinks')
+                            .classList.toggle('show')
+                    "
+                >
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </nav>
 
         <div class="wrap fade-in">
             <!-- Header Section -->
@@ -71,6 +116,54 @@
                 <button class="tab-btn" onclick="setVersion('1.0', this)">
                     AWG 1.0
                 </button>
+            </div>
+
+            <!-- Version compatibility notice — shown/hidden by setVersion() -->
+            <div
+                id="verNotice10"
+                class="info-alert"
+                style="
+                    display: none;
+                    margin-bottom: 12px;
+                    border-left-color: #ff9800;
+                    background: rgba(255, 152, 0, 0.08);
+                "
+            >
+                <div class="info-alert-icon" style="color: #ff9800">
+                    <i
+                        data-lucide="triangle-alert"
+                        style="width: 16px; height: 16px"
+                    ></i>
+                </div>
+                <div class="info-alert-content" style="font-size: 0.72rem">
+                    <b style="color: #ff9800"
+                        >AWG 1.0 — ограниченная поддержка.</b
+                    >
+                    В этой версии параметры <b>S3, S4</b> и вся цепочка
+                    <b>I1–I5 (CPS)</b> не поддерживаются и будут проигнорированы
+                    клиентом. Настройки профиля мимикрии, браузерного отпечатка
+                    и MTU в этом режиме неактивны.
+                </div>
+            </div>
+            <div
+                id="verNotice15"
+                class="info-alert"
+                style="
+                    display: none;
+                    margin-bottom: 12px;
+                    border-left-color: #4a9eff;
+                    background: rgba(74, 158, 255, 0.08);
+                "
+            >
+                <div class="info-alert-icon" style="color: #4a9eff">
+                    <i data-lucide="info" style="width: 16px; height: 16px"></i>
+                </div>
+                <div class="info-alert-content" style="font-size: 0.72rem">
+                    <b style="color: #4a9eff">AWG 1.5 — клиентский CPS.</b>
+                    Параметры <b>S3, S4</b> не поддерживаются в AWG 1.5. Цепочка
+                    <b>I1–I5</b> поддерживается, но только на стороне
+                    <b>клиента</b> — сервер их не использует.
+                </div>
             </div>
 
             <!-- Main Config Grid -->
@@ -129,153 +222,368 @@
                             Применять профиль мимикрии для I2–I5
                         </label>
 
-                        <div
-                            class="clabel"
-                            style="margin-top: 15px; margin-bottom: 10px"
-                        >
-                            Теги в CPS (I1-I5):
-                        </div>
-                        <div
-                            style="
-                                display: grid;
-                                grid-template-columns: 1fr 1fr;
-                                gap: 8px;
-                            "
-                        >
-                            <label class="check-label">
-                                <input
-                                    type="checkbox"
-                                    id="useTagC"
-                                    onchange="generate()"
-                                />
-                                &lt;c&gt; (Счетчик)
-                            </label>
-                            <label class="check-label">
-                                <input
-                                    type="checkbox"
-                                    id="useTagT"
-                                    checked
-                                    onchange="generate()"
-                                />
-                                &lt;t&gt; (Время)
-                            </label>
-                            <label class="check-label">
-                                <input
-                                    type="checkbox"
-                                    id="useTagR"
-                                    checked
-                                    onchange="generate()"
-                                />
-                                &lt;r&gt; (Random)
-                            </label>
-                            <label class="check-label">
-                                <input
-                                    type="checkbox"
-                                    id="useTagRC"
-                                    checked
-                                    onchange="generate()"
-                                />
-                                &lt;rc&gt; (Chars)
-                            </label>
-                            <label class="check-label">
-                                <input
-                                    type="checkbox"
-                                    id="useTagRD"
-                                    checked
-                                    onchange="generate()"
-                                />
-                                &lt;rd&gt; (Digits)
-                            </label>
-                        </div>
-
-                        <div
-                            class="info-alert"
-                            style="margin-top: 15px; padding: 12px 16px"
-                        >
-                            <div class="info-alert-icon">
-                                <i
-                                    data-lucide="info"
-                                    style="width: 16px; height: 16px"
-                                ></i>
+                        <!-- CPS block — hidden in AWG 1.0 -->
+                        <div id="cpsBlock">
+                            <div
+                                class="clabel"
+                                style="margin-top: 15px; margin-bottom: 10px"
+                            >
+                                Теги в CPS (I1-I5):
                             </div>
                             <div
-                                class="info-alert-content"
-                                style="font-size: 0.72rem"
-                            >
-                                <b>Внимание:</b> В старых версиях AmneziaWG-go
-                                тег <code>&lt;c&gt;</code> может вызывать
-                                <b>ErrorCode 1000</b> /
-                                <b>unknown tag &lt;c&gt;</b>. Если подключение
-                                не устанавливается — отключите его. Тег
-                                <code>&lt;c&gt;</code> по умолчанию
-                                <b>отключён</b>.
-                            </div>
-                        </div>
-
-                        <!-- Browser Fingerprint Block -->
-                        <div
-                            class="clabel"
-                            style="margin-top: 20px; margin-bottom: 10px"
-                        >
-                            <i
-                                data-lucide="fingerprint"
-                                class="icon-s"
                                 style="
-                                    vertical-align: middle;
-                                    margin-right: 4px;
-                                "
-                            ></i>
-                            Браузерный отпечаток:
-                        </div>
-                        <label class="check-label">
-                            <input
-                                type="checkbox"
-                                id="useBrowserFp"
-                                onchange="
-                                    toggleBrowserFp();
-                                    generate();
-                                "
-                            />
-                            Имитировать размеры пакетов под браузер
-                        </label>
-                        <div
-                            id="browserFpWrap"
-                            style="display: none; margin-top: 10px"
-                        >
-                            <select
-                                id="browserFpProfile"
-                                class="sel"
-                                onchange="
-                                    toggleYandexWarn();
-                                    generate();
+                                    display: grid;
+                                    grid-template-columns: 1fr 1fr;
+                                    gap: 8px;
                                 "
                             >
-                                <option value="chrome">
-                                    Chrome — Initial: 1250, 0-RTT: 1250–1350
-                                </option>
-                                <option value="edge">
-                                    Edge — Initial: 1250, 0-RTT: 1250–1350
-                                </option>
-                                <option value="firefox">
-                                    Firefox — Initial: 1200–1252, RFC 9000
-                                </option>
-                                <option value="safari">
-                                    Safari — Initial: 1250–1252, iOS 15+
-                                </option>
-                                <option disabled>
-                                    ── Яндекс (нестабильно) ──
-                                </option>
-                                <option value="yandex_desktop">
-                                    ⚠ Яндекс Desktop — Initial: 1250, H3: 1350
-                                </option>
-                                <option value="yandex_mobile">
-                                    ⚠ Яндекс Mobile / Turbo — Initial: 1232, H3:
-                                    1350
-                                </option>
-                            </select>
+                                <label class="check-label">
+                                    <input
+                                        type="checkbox"
+                                        id="useTagC"
+                                        onchange="generate()"
+                                    />
+                                    &lt;c&gt; (Счетчик)
+                                </label>
+                                <label class="check-label">
+                                    <input
+                                        type="checkbox"
+                                        id="useTagT"
+                                        checked
+                                        onchange="generate()"
+                                    />
+                                    &lt;t&gt; (Время)
+                                </label>
+                                <label class="check-label">
+                                    <input
+                                        type="checkbox"
+                                        id="useTagR"
+                                        checked
+                                        onchange="generate()"
+                                    />
+                                    &lt;r&gt; (Random)
+                                </label>
+                                <label class="check-label">
+                                    <input
+                                        type="checkbox"
+                                        id="useTagRC"
+                                        checked
+                                        onchange="generate()"
+                                    />
+                                    &lt;rc&gt; (Chars)
+                                </label>
+                                <label class="check-label">
+                                    <input
+                                        type="checkbox"
+                                        id="useTagRD"
+                                        checked
+                                        onchange="generate()"
+                                    />
+                                    &lt;rd&gt; (Digits)
+                                </label>
+                            </div>
+
                             <div
                                 class="info-alert"
-                                style="margin-top: 10px; padding: 10px 14px"
+                                style="margin-top: 15px; padding: 12px 16px"
+                            >
+                                <div class="info-alert-icon">
+                                    <i
+                                        data-lucide="info"
+                                        style="width: 16px; height: 16px"
+                                    ></i>
+                                </div>
+                                <div
+                                    class="info-alert-content"
+                                    style="font-size: 0.72rem"
+                                >
+                                    <b>Внимание:</b> В старых версиях
+                                    AmneziaWG-go тег
+                                    <code>&lt;c&gt;</code> может вызывать
+                                    <b>ErrorCode 1000</b> /
+                                    <b>unknown tag &lt;c&gt;</b>. Если
+                                    подключение не устанавливается — отключите
+                                    его. Тег <code>&lt;c&gt;</code> по умолчанию
+                                    <b>отключён</b>.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- AWG 1.0 CPS not-supported notice -->
+                        <div
+                            id="cpsUnsupportedNotice"
+                            style="display: none; margin-top: 15px"
+                        >
+                            <div
+                                class="info-alert"
+                                style="
+                                    border-left-color: #ff9800;
+                                    background: rgba(255, 152, 0, 0.08);
+                                    padding: 10px 14px;
+                                "
+                            >
+                                <div
+                                    class="info-alert-icon"
+                                    style="color: #ff9800"
+                                >
+                                    <i
+                                        data-lucide="ban"
+                                        style="width: 14px; height: 14px"
+                                    ></i>
+                                </div>
+                                <div
+                                    class="info-alert-content"
+                                    style="font-size: 0.7rem"
+                                >
+                                    <b style="color: #ff9800"
+                                        >CPS (I1–I5) не поддерживается в AWG
+                                        1.0.</b
+                                    >
+                                    Параметры профиля мимикрии, браузерного
+                                    отпечатка и MTU-паддинга недоступны в этой
+                                    версии протокола.
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Browser Fingerprint Block — hidden in AWG 1.0 -->
+                        <div id="bfpOuterBlock">
+                            <div
+                                class="clabel"
+                                style="margin-top: 20px; margin-bottom: 10px"
+                            >
+                                <i
+                                    data-lucide="fingerprint"
+                                    class="icon-s"
+                                    style="
+                                        vertical-align: middle;
+                                        margin-right: 4px;
+                                    "
+                                ></i>
+                                Браузерный отпечаток:
+                            </div>
+                            <label class="check-label">
+                                <input
+                                    type="checkbox"
+                                    id="useBrowserFp"
+                                    onchange="
+                                        toggleBrowserFp();
+                                        generate();
+                                    "
+                                />
+                                Имитировать размеры пакетов под браузер
+                            </label>
+                            <div
+                                id="browserFpWrap"
+                                style="display: none; margin-top: 10px"
+                            >
+                                <select
+                                    id="browserFpProfile"
+                                    class="sel"
+                                    onchange="
+                                        toggleYandexWarn();
+                                        generate();
+                                    "
+                                >
+                                    <option value="chrome">
+                                        Chrome — Initial: 1250, 0-RTT: 1250–1350
+                                    </option>
+                                    <option value="edge">
+                                        Edge — Initial: 1250, 0-RTT: 1250–1350
+                                    </option>
+                                    <option value="firefox">
+                                        Firefox — Initial: 1200–1252, RFC 9000
+                                    </option>
+                                    <option value="safari">
+                                        Safari — Initial: 1250–1252, iOS 15+
+                                    </option>
+                                    <option disabled>
+                                        ── Яндекс (нестабильно) ──
+                                    </option>
+                                    <option value="yandex_desktop">
+                                        ⚠ Яндекс Desktop — Initial: 1250, H3:
+                                        1350
+                                    </option>
+                                    <option value="yandex_mobile">
+                                        ⚠ Яндекс Mobile / Turbo — Initial: 1232,
+                                        H3: 1350
+                                    </option>
+                                </select>
+                                <div
+                                    class="info-alert"
+                                    style="margin-top: 10px; padding: 10px 14px"
+                                >
+                                    <div class="info-alert-icon">
+                                        <i
+                                            data-lucide="info"
+                                            style="width: 14px; height: 14px"
+                                        ></i>
+                                    </div>
+                                    <div
+                                        class="info-alert-content"
+                                        style="font-size: 0.7rem"
+                                    >
+                                        Padding применяется автоматически для
+                                        каждого протокола согласно реальным
+                                        замерам:
+                                        <br /><br />
+                                        <b>QUIC Initial</b> —
+                                        Chrome/Edge/Safari: <b>1250 байт</b>,
+                                        Firefox: <b>1200–1252 байт</b> (RFC 9000
+                                        §14.1).<br />
+                                        <b>QUIC 0-RTT</b> — выравнивание по
+                                        Initial-границе либо до MTU
+                                        <b>~1350 байт</b>.<br />
+                                        <b>HTTP/3</b> — копирует Chrome QUIC:
+                                        хендшейк <b>1250</b>, DATA до
+                                        <b>1350 байт</b>.<br />
+                                        <b>TLS ClientHello</b> —
+                                        <b>512–800 байт</b>; Chrome выравнивает
+                                        до кратного <b>128</b>.<br />
+                                        <b>Noise_IK</b> — строго
+                                        <b>148 байт</b> без padding выдаёт себя;
+                                        при включённом fp добивается до
+                                        <b>1200–1250 байт</b>.<br />
+                                        <b>DTLS (WebRTC)</b> — удерживается
+                                        <b>&lt; 1200 байт</b> во избежание
+                                        IP-фрагментации.
+                                    </div>
+                                </div>
+                                <!-- Yandex unstable profile warning -->
+                                <div
+                                    id="yandexFpWarn"
+                                    class="info-alert"
+                                    style="
+                                        display: none;
+                                        margin-top: 10px;
+                                        padding: 10px 14px;
+                                        border-left-color: #4a9eff;
+                                        background: rgba(74, 158, 255, 0.08);
+                                    "
+                                >
+                                    <div
+                                        class="info-alert-icon"
+                                        style="color: #4a9eff"
+                                    >
+                                        <i
+                                            data-lucide="triangle-alert"
+                                            style="width: 14px; height: 14px"
+                                        ></i>
+                                    </div>
+                                    <div
+                                        class="info-alert-content"
+                                        style="font-size: 0.7rem"
+                                    >
+                                        <b style="color: #4a9eff"
+                                            >Нестабильный профиль.</b
+                                        >
+                                        Параметры Яндекс Браузера получены
+                                        эмпирически и могут меняться между
+                                        версиями. Яндекс использует собственные
+                                        сборки Chromium с закрытыми
+                                        оптимизациями — точность мимикрии не
+                                        гарантируется. По возможности
+                                        используйте
+                                        <b>Chrome</b>, <b>Firefox</b> или
+                                        <b>Safari</b>.
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- /bfpOuterBlock -->
+
+                        <!-- MTU Input Block — hidden in AWG 1.0 -->
+                        <div id="mtuBlock">
+                            <div
+                                class="clabel"
+                                style="margin-top: 20px; margin-bottom: 8px"
+                            >
+                                <i
+                                    data-lucide="network"
+                                    class="icon-s"
+                                    style="
+                                        vertical-align: middle;
+                                        margin-right: 4px;
+                                    "
+                                ></i>
+                                MTU интерфейса:
+                            </div>
+                            <div
+                                style="
+                                    display: flex;
+                                    gap: 8px;
+                                    align-items: center;
+                                "
+                            >
+                                <input
+                                    type="number"
+                                    id="userMtu"
+                                    class="sel"
+                                    value="1500"
+                                    min="576"
+                                    max="9000"
+                                    step="1"
+                                    style="width: 110px; flex-shrink: 0"
+                                    onchange="generate()"
+                                    oninput="generate()"
+                                />
+                                <div
+                                    style="
+                                        display: flex;
+                                        gap: 6px;
+                                        flex-wrap: wrap;
+                                    "
+                                >
+                                    <button
+                                        class="int-b"
+                                        style="
+                                            font-size: 10px;
+                                            padding: 4px 8px;
+                                        "
+                                        onclick="
+                                            document.getElementById(
+                                                'userMtu',
+                                            ).value = 1500;
+                                            generate();
+                                        "
+                                    >
+                                        1500
+                                    </button>
+                                    <button
+                                        class="int-b"
+                                        style="
+                                            font-size: 10px;
+                                            padding: 4px 8px;
+                                        "
+                                        onclick="
+                                            document.getElementById(
+                                                'userMtu',
+                                            ).value = 1420;
+                                            generate();
+                                        "
+                                    >
+                                        1420
+                                    </button>
+                                    <button
+                                        class="int-b"
+                                        style="
+                                            font-size: 10px;
+                                            padding: 4px 8px;
+                                        "
+                                        onclick="
+                                            document.getElementById(
+                                                'userMtu',
+                                            ).value = 1280;
+                                            generate();
+                                        "
+                                    >
+                                        1280
+                                    </button>
+                                </div>
+                            </div>
+                            <div
+                                class="info-alert"
+                                style="margin-top: 8px; padding: 10px 14px"
                             >
                                 <div class="info-alert-icon">
                                     <i
@@ -287,68 +595,18 @@
                                     class="info-alert-content"
                                     style="font-size: 0.7rem"
                                 >
-                                    Padding применяется автоматически для
-                                    каждого протокола согласно реальным замерам:
-                                    <br /><br />
-                                    <b>QUIC Initial</b> — Chrome/Edge/Safari:
-                                    <b>1250 байт</b>, Firefox:
-                                    <b>1200–1252 байт</b> (RFC 9000 §14.1).<br />
-                                    <b>QUIC 0-RTT</b> — выравнивание по
-                                    Initial-границе либо до MTU
-                                    <b>~1350 байт</b>.<br />
-                                    <b>HTTP/3</b> — копирует Chrome QUIC:
-                                    хендшейк <b>1250</b>, DATA до
-                                    <b>1350 байт</b>.<br />
-                                    <b>TLS ClientHello</b> —
-                                    <b>512–800 байт</b>; Chrome выравнивает до
-                                    кратного <b>128</b>.<br />
-                                    <b>Noise_IK</b> — строго <b>148 байт</b> без
-                                    padding выдаёт себя; при включённом fp
-                                    добивается до <b>1200–1250 байт</b>.<br />
-                                    <b>DTLS (WebRTC)</b> — удерживается
-                                    <b>&lt; 1200 байт</b> во избежание
-                                    IP-фрагментации.
-                                </div>
-                            </div>
-                            <!-- Yandex unstable profile warning -->
-                            <div
-                                id="yandexFpWarn"
-                                class="info-alert"
-                                style="
-                                    display: none;
-                                    margin-top: 10px;
-                                    padding: 10px 14px;
-                                    border-left-color: #4a9eff;
-                                    background: rgba(74, 158, 255, 0.08);
-                                "
-                            >
-                                <div
-                                    class="info-alert-icon"
-                                    style="color: #4a9eff"
-                                >
-                                    <i
-                                        data-lucide="triangle-alert"
-                                        style="width: 14px; height: 14px"
-                                    ></i>
-                                </div>
-                                <div
-                                    class="info-alert-content"
-                                    style="font-size: 0.7rem"
-                                >
-                                    <b style="color: #4a9eff"
-                                        >Нестабильный профиль.</b
-                                    >
-                                    Параметры Яндекс Браузера получены
-                                    эмпирически и могут меняться между версиями.
-                                    Яндекс использует собственные сборки
-                                    Chromium с закрытыми оптимизациями —
-                                    точность мимикрии не гарантируется. По
-                                    возможности используйте
-                                    <b>Chrome</b>, <b>Firefox</b> или
-                                    <b>Safari</b>.
+                                    Укажите MTU вашего сетевого интерфейса.
+                                    Паддинг будет ограничен так, чтобы итоговый
+                                    пакет не превышал MTU — иначе фрагментация
+                                    раскроет трафик для DPI.<br /><br />
+                                    <b>1500</b> — стандартный Ethernet
+                                    &nbsp;·&nbsp; <b>1420</b> — WireGuard /
+                                    PPPoE &nbsp;·&nbsp; <b>1280</b> —
+                                    минимальный IPv6
                                 </div>
                             </div>
                         </div>
+                        <!-- /mtuBlock -->
 
                         <div class="clabel" style="margin-top: 20px">
                             Интенсивность энтропии:
@@ -477,6 +735,39 @@
             </div>
 
             <div class="a4"></div>
+
+            <!-- MergeKeys CTA banner -->
+            <div class="mk-cta-banner">
+                <div class="mk-cta-inner">
+                    <div class="mk-cta-info">
+                        <div class="mk-cta-title">
+                            <i data-lucide="git-merge" class="icon-m"></i>
+                            <span>MERGE KEYS</span>
+                        </div>
+                        <p class="mk-cta-desc">
+                            Обновите параметры обфускации в вашем существующем
+                            ключе Amnezia, или объедините несколько ключей
+                            (AWG&nbsp;+&nbsp;XRay и др.) в один.
+                        </p>
+                    </div>
+                    <div class="mk-cta-actions">
+                        <button
+                            class="btn-primary"
+                            onclick="openMergeKeys('update')"
+                        >
+                            <i data-lucide="zap" class="icon-s"></i>
+                            Обновить обфускацию
+                        </button>
+                        <button
+                            class="btn-teal"
+                            onclick="openMergeKeys('merge')"
+                        >
+                            <i data-lucide="git-merge" class="icon-s"></i>
+                            Объединить с моим ключом
+                        </button>
+                    </div>
+                </div>
+            </div>
 
             <!-- Documentation & FAQ Section -->
             <div class="a5">
@@ -917,97 +1208,132 @@
             </div>
 
             <!-- Footer -->
-            <div class="footer">
-                <div class="footer-slogan">
-                    На страже вашей анонимности, приватности и безопасности.
+            <footer class="main-footer">
+                <div class="main-footer-inner">
+                    <!-- Slogan -->
+                    <div class="footer-slogan">
+                        Шифруем реальность.
+                        <span class="slogan-accent slogan-glow"
+                            >Архитектура свободы</span
+                        >
+                        — в каждом пакете.
+                    </div>
+
+                    <!-- Links Grid -->
+                    <div class="footer-grid">
+                        <a
+                            href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="footer-grid-link"
+                        >
+                            <i data-lucide="github" class="icon-m"></i>
+                            <div class="fgl-content">
+                                <span class="fgl-title">Исходный код</span>
+                                <span class="fgl-desc"
+                                    >AmneziaWG-Architect на GitHub</span
+                                >
+                            </div>
+                        </a>
+                        <a
+                            href="https://github.com/Vadim-Khristenko/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="footer-grid-link"
+                        >
+                            <i data-lucide="user" class="icon-m"></i>
+                            <div class="fgl-content">
+                                <span class="fgl-title">Автор проекта</span>
+                                <span class="fgl-desc">Vadim-Khristenko</span>
+                            </div>
+                        </a>
+                        <a
+                            href="https://t.me/amnezia_vpn"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="footer-grid-link"
+                        >
+                            <i data-lucide="send" class="icon-m"></i>
+                            <div class="fgl-content">
+                                <span class="fgl-title">Amnezia VPN Чат</span>
+                                <span class="fgl-desc"
+                                    >Сообщество в Telegram</span
+                                >
+                            </div>
+                        </a>
+                        <a
+                            href="https://github.com/amnezia-vpn/"
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="footer-grid-link"
+                        >
+                            <i data-lucide="shield" class="icon-m"></i>
+                            <div class="fgl-content">
+                                <span class="fgl-title">Amnezia VPN</span>
+                                <span class="fgl-desc">Официальный GitHub</span>
+                            </div>
+                        </a>
+                    </div>
+
+                    <div class="footer-divider"></div>
+
+                    <!-- Credits — VoidWaifu -->
+                    <div class="footer-credits">
+                        <div class="footer-credits-label">
+                            Вдохновение и исследования
+                        </div>
+                        <div class="footer-credits-text">
+                            Основано на идеях и исследованиях из
+                            <a
+                                href="https://voidwaifu.github.io/Special-Junk-Packet-List/"
+                                target="_blank"
+                                >Special Junk Packet List</a
+                            >
+                            и вдохновлено работой
+                            <a
+                                href="https://github.com/VoidWaifu"
+                                target="_blank"
+                                >@VoidWaifu</a
+                            >
+                        </div>
+                    </div>
+
+                    <div class="footer-divider"></div>
+
+                    <!-- Copyright -->
+                    <div class="footer-copy">
+                        <span class="copy-brand">AmneziaWG Architect</span>
+                        &copy; 2026 — Инструмент для свободного интернета<br />
+                        Разработано с <span class="copy-heart">❤️</span> для
+                        сообщества AmneziaVPN
+                    </div>
                 </div>
-                <div class="footer-links">
-                    <a href="about.html">
-                        <i data-lucide="info" class="icon-s"></i> О проекте
-                    </a>
-                    <a
-                        href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <i data-lucide="github" class="icon-s"></i> Исходный код
-                    </a>
-                    <a
-                        href="https://t.me/amnezia_vpn"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <i data-lucide="send" class="icon-s"></i> Telegram Chat
-                        (Amnezia)
-                    </a>
-                    <a
-                        href="https://github.com/amnezia-vpn/"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                    >
-                        <i data-lucide="github" class="icon-s"></i> AmneziaVPN
-                        Organization
-                    </a>
-                </div>
-                <div class="footer-copy">
-                    AmneziaWG Architect &copy; 2026 | Инструмент для свободного
-                    интернета<br />
-                    Разработано с ❤️ для сообщества AmneziaVPN
-                </div>
-                <div
-                    class="footer-credits"
-                    style="
-                        text-align: center;
-                        margin-bottom: 12px;
-                        font-size: 0.85rem;
-                        opacity: 0.8;
-                    "
-                >
-                    Основано на идеи и исследованиях из
-                    <a
-                        href="https://voidwaifu.github.io/Special-Junk-Packet-List/"
-                        target="_blank"
-                        style="color: var(--accent)"
-                        >Special Junk Packet List</a
-                    >
-                    и вдохновлено работой
-                    <a
-                        href="https://github.com/VoidWaifu"
-                        target="_blank"
-                        style="color: var(--accent)"
-                        >@VoidWaifu</a
-                    >
-                </div>
-            </div>
+            </footer>
         </div>
 
         <script src="script.js"></script>
+        <script src="ui-script.js"></script>
         <script>
-            // Инициализация иконок Lucide
-            window.addEventListener("DOMContentLoaded", () => {
-                lucide.createIcons();
-                const wrap = document.getElementById("customHostWrap");
-                const hint = document.getElementById("customHostHint");
-                const input = document.getElementById("customHost");
-                if (wrap) wrap.classList.add("show");
-                if (hint)
-                    hint.textContent =
-                        "QUIC-capable: fastly.net, cdn-apple.com, cdn1.telegram.org …";
-                if (input)
-                    input.placeholder = "Хост с QUIC (напр., fastly.net)";
-            });
-
-            const originalGenerate = window.generate;
-            window.generate = function () {
-                originalGenerate();
-                setTimeout(() => lucide.createIcons(), 50);
-            };
-
-            const originalRenderCfg = window.renderCfg;
-            window.renderCfg = function (p) {
-                originalRenderCfg(p);
-                setTimeout(() => lucide.createIcons(), 50);
-            };
+            /**
+             * openMergeKeys() — сохраняет текущий сгенерированный конфиг
+             * в sessionStorage и открывает страницу MergeKeys.
+             */
+            /**
+             * openMergeKeys(tab) — сохраняет текущий сгенерированный конфиг
+             * в sessionStorage и открывает страницу MergeKeys.
+             * tab: 'update' | 'merge' — вкладка которую открыть сразу.
+             */
+            function openMergeKeys(tab) {
+                if (cp) {
+                    sessionStorage.setItem(
+                        "awg_pending_cfg",
+                        JSON.stringify({ cfg: cp, ver: ver }),
+                    );
+                }
+                var url = "mergekeys.html";
+                if (tab) url += "?tab=" + tab;
+                window.location.href = url;
+            }
         </script>
     </body>
 </html>

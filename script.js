@@ -4,7 +4,7 @@ var ver = "2.0",
   cp = null;
 
 /**
- * AmneziaWG Architect — hostPools v2.2
+ * AmneziaWG Architect — hostPools v2.3
  *
  * Последнее обновление пула: март 2026.
  *
@@ -23,8 +23,9 @@ var ver = "2.0",
  *  WhatsApp        — полностью заблокирован с 11.02.2026 (DNS удалены из NSDI)
  *  Snapchat        — блокируется
  *  LinkedIn        — блокируется с 2016
- *  Google services — частично: поиск/YouTube блокированы; GCP/Firebase часто доступны
- *                    (но отдельные STUN/IP-диапазоны недоступны)
+ *  Google services — частично: поиск/YouTube заблокированы; GCP/Firebase часто доступны
+ *                    (но STUN-серверы Google 74.125.x.x/172.217.x.x недоступны из-за
+ *                    перекрытия с заблокированными диапазонами YouTube)
  *  Twitter/X       — доступ существенно ограничен, считается заблокированным
  *
  * ── Статус CDN Telegram ─────────────────────────────────────────────────────
@@ -81,6 +82,9 @@ var hostPools = {
     "raiffeisen.ru",
     "vtb.ru",
     "alfabank.ru",
+    "gazprombank.ru", // Газпромбанк
+    "sovcombank.ru", // Совкомбанк
+    "rosbank.ru", // Росбанк
     "kaspersky.ru",
     "kaspersky.com",
     "drweb.ru",
@@ -97,26 +101,61 @@ var hostPools = {
     "beeline.ru",
     "megafon.ru",
     "rostelecom.ru",
+    "tele2.ru",
+    "mvideo.ru", // Retail
+    "eldorado.ru",
+    "dns-shop.ru",
+    "citilink.ru",
+    "lamoda.ru",
+    "sportmaster.ru",
+    "detmir.ru",
+    "sbermegamarket.ru",
+    "gosuslugi.ru", // 🟢 Gov — абсолютно незаблокируемые
+    "mos.ru",
+    "nalog.ru",
+    "pfr.gov.ru",
+    "cbr.ru",
+    "roscosmos.ru",
+    "premier.one", // RU VOD
+    "okko.tv",
+    "more.tv",
+    "1tv.ru", // RU TV channels
+    "ntv.ru",
+    "russia.tv",
+    "rbc.ru", // RU news
+    "tass.ru",
+    "ria.ru",
+    "gazeta.ru",
+    "lenta.ru",
+    "hh.ru", // Job boards
+    "superjob.ru",
+    "2gis.ru", // Maps
+    "championat.com", // Sports
+    "sports.ru",
+    "rambler.ru",
+    "livejournal.com",
 
     // 🔵 CDN-infra (RU banks/gov/enterprises depend on these)
-    "gcore.com", // Gcore (Luxembourg HQ, PoP in Moscow/SPb) — HTTP/3
+    "gcore.com", // Gcore — HTTP/3, PoP в Москве/СПб
     "api.gcore.com",
     "cdn.gcore.com",
     "g.gcdn.co", // Gcore edge alias
-    "bunny.net", // BunnyCDN — HTTP/3 default, Fastly backend
+    "gcdn.co",
+    "bunny.net", // BunnyCDN — HTTP/3 default
     "b-cdn.net",
     "storage.bunnycdn.com",
-    "cdn77.com", // CDN77 — HTTP/3, serves Avast, European Space Agency
+    "cdn77.com", // CDN77 — HTTP/3
     "rsc.cdn77.org",
     "fastly.net", // Fastly — serves GitHub, npm, Spotify
     "a.ssl.fastly.net",
     "global.fastly.net",
     "fastlylabs.com",
-    "a248.e.akamai.net", // Akamai — serves RU Sberbank, Tinkoff, VTB CDN
+    "a248.e.akamai.net", // Akamai — serves Sberbank, Tinkoff, VTB CDN
     "akamaiedge.net",
     "akamaihd.net",
     "akamaistream.net",
     "edgekey.net",
+    "akam.net",
     "cloudfront.net", // AWS CloudFront — serves RU banking APIs
     "d1.awsstatic.com",
     "d2.awsstatic.com",
@@ -124,18 +163,28 @@ var hostPools = {
     "msedge.net", // Microsoft CDN — Win Update, Office365
     "cdn.office.net",
     "azureedge.net",
+    "azure.microsoft.com",
     "live.com",
     "outlook.com",
     "office.com",
+    "hotmail.com",
     "microsoft.com",
     "xbox.com",
     "xboxlive.com",
     "onedrive.live.com",
+    "trafficmanager.net",
     "icloud.com", // Apple — ~50M RU iOS devices
     "cdn-apple.com",
     "mzstatic.com",
     "apple.com",
     "appleid.apple.com",
+    "limelight.com", // Limelight/Edgio CDN
+    "llnwd.net",
+    "edg.io", // Edgio (ex-Limelight)
+    "highwinds.com",
+    "stackpathdns.com", // StackPath/Highwinds
+    "cachefly.net", // CacheFly — HPC CDN
+    "imperva.com", // Imperva CDN (ex-Incapsula)
 
     // 🟡 Tech-neutral
     "github.com",
@@ -144,39 +193,60 @@ var hostPools = {
     "codeload.github.com",
     "github.githubassets.com",
     "avatars.githubusercontent.com",
+    "releases.githubusercontent.com",
     "gitlab.com", // GitLab (not blocked)
     "cdn.jsdelivr.net", // jsDelivr — open CDN for npm/GitHub
     "unpkg.com",
     "registry.npmjs.org",
     "pypi.org", // Python Package Index
     "files.pythonhosted.org",
-    "archive.ubuntu.com", // Ubuntu mirrors — used by every Linux VPS
+    "archive.ubuntu.com", // Ubuntu mirrors
     "security.ubuntu.com",
     "packages.ubuntu.com",
     "deb.debian.org",
     "ftp.debian.org",
+    "launchpad.net",
+    "snapcraft.io",
     "steamstatic.com", // Steam/Valve
     "steamcontent.com",
     "steampowered.com",
     "steamcdn-a.akamaihd.net",
+    "store.steampowered.com",
+    "epicgames.com",
+    "ea.com",
+    "battle.net",
+    "blizzard.com",
+    "ubisoft.com",
+    "riotgames.com",
+    "leagueoflegends.com",
     "spotify.com", // Spotify (accessible in RU)
     "scdn.co",
     "heads-ak.spotify.com",
-    "jtvnw.net", // Twitch media CDN (Akamai-backed)
+    "jtvnw.net", // Twitch media CDN
     "twitchsvc.net",
     "wikipedia.org", // Wikipedia — never blocked
     "upload.wikimedia.org",
     "wikimedia.org",
     "wikidata.org",
-
-    // 🟡 Hetzner / OVH / Selectel (popular RU dev/business VPS)
-    "hetzner.com",
+    "commons.wikimedia.org",
+    "hetzner.com", // Hetzner (popular RU dev VPS)
     "hetzner.de",
     "hetzner.cloud",
     "your-server.de",
-    "ovhcloud.com",
+    "ovhcloud.com", // OVH
     "ovh.net",
     "ovh.com",
+    "gra-g1.ovh.net",
+    "digitalocean.com", // DigitalOcean — widely used by RU devs
+    "dropbox.com",
+    "dropboxstatic.com",
+    "dropboxapi.com",
+    "notion.so", // Notion (accessible in RU)
+    "notionusercontent.com",
+    "zoom.us", // Zoom (accessible in RU)
+    "zmtr.cn",
+    "valve.net",
+    "linode.com", // Akamai/Linode cloud
 
     // 🟠 Asian CDN / cloud
     "tencentcs.com",
@@ -189,21 +259,15 @@ var hostPools = {
     "taobao.com",
     "huaweicloud.com",
     "hwcdn.net",
-
-    // 🟠 Additional international accessible in RU
-    "dropbox.com",
-    "dropboxstatic.com",
-    "epicgames.com",
-    "ea.com",
-    "battle.net",
-    "blizzard.com",
-    "ubisoft.com",
+    "baidu.com", // Baidu CDN
+    "bdstatic.com",
+    "bceloss.com", // Baidu BCE CDN
   ],
 
   /* ──────────────────────────────────────────────────────────────────────────
-   * QUIC 0-RTT (Long Header 0xD0-0xD3, возобновление сессии)
-   * Пулы — только те CDN/сервисы, где подтверждена поддержка 0-RTT / session tickets.
-   * Используется для правдоподобного эмулирования ранних данных (Early Data).
+   * QUIC 0-RTT (Early Data, Long Header 0xD0-0xD3, UDP 443)
+   * Хосты, у которых в сессии с QUIC возможен TLS session resumption (0-RTT).
+   * Только CDN/сервисы с подтверждённой поддержкой 0-RTT / QUIC session tickets.
    * ────────────────────────────────────────────────────────────────────────── */
   quic_0rtt: [
     // 🟢 RU-domestic
@@ -223,11 +287,15 @@ var hostPools = {
     "kaspersky.com",
     "selectel.ru",
     "timeweb.cloud",
+    "tbank.ru",
+    "alfabank.ru",
+    "gosuslugi.ru",
 
     // 🔵 CDN-infra (confirmed 0-RTT)
     "gcore.com",
     "cdn.gcore.com",
     "g.gcdn.co",
+    "gcdn.co",
     "bunny.net",
     "b-cdn.net",
     "cdn77.com",
@@ -242,9 +310,12 @@ var hostPools = {
     "live.com",
     "office.com",
     "xbox.com",
-    "icloud.com", // Apple QUIC: confirmed 0-RTT in iOS 17+
+    "icloud.com", // Apple: 0-RTT confirmed in iOS 17+
     "cdn-apple.com",
     "mzstatic.com",
+    "akamaiedge.net",
+    "akamaihd.net",
+    "edgekey.net",
 
     // 🟡 Tech-neutral
     "github.com",
@@ -267,15 +338,16 @@ var hostPools = {
     "tencentcs.com",
     "myqcloud.com",
     "huaweicloud.com",
+    "bdstatic.com",
   ],
 
   /* ──────────────────────────────────────────────────────────────────────────
-   * TLS 1.3 Client Hello
-   * Самый широкий пул: любой HTTPS-хост подходит, список отсортирован по
-   * надёжности и доступности в России на 2026 год.
+   * TLS 1.3 Client Hello (TCP 443)
+   * Широкий пул — TLS используется практически везде. Сортировка по надёжности
+   * в России в 2026 году.
    * ────────────────────────────────────────────────────────────────────────── */
   tls_client_hello: [
-    // 🟢 RU-domestic: top-100 Russian websites
+    // 🟢 RU-domestic: топ-100 российских сайтов по посещаемости
     "yandex.net",
     "yandex.ru",
     "yastatic.net",
@@ -309,6 +381,7 @@ var hostPools = {
     "ntv.ru",
     "ren.tv",
     "tvc.ru",
+    "5-tv.ru",
     "sber.ru",
     "sberbank.ru",
     "sbp.ru",
@@ -321,12 +394,22 @@ var hostPools = {
     "gazprombank.ru",
     "sovcombank.ru",
     "rosbank.ru",
+    "otkritie.ru",
+    "rshb.ru", // Открытие, Россельхозбанк
+    "pochtabank.ru",
+    "bspb.ru", // Почта Банк, БСП
     "kaspersky.ru",
     "kaspersky.com",
     "drweb.ru",
     "drweb.com",
     "roscosmos.ru",
-    "gosuslugi.ru", // Russian government portals
+    "gosuslugi.ru",
+    "mos.ru",
+    "nalog.ru",
+    "pfr.gov.ru",
+    "cbr.ru",
+    "esia.gosuslugi.ru",
+    "epgu.gosuslugi.ru",
     "mts.ru",
     "beeline.ru",
     "megafon.ru",
@@ -341,6 +424,10 @@ var hostPools = {
     "nic.ru",
     "dataline.ru",
     "mchost.ru",
+    "spaceweb.ru",
+    "sweb.ru", // SpaceWeb RU hoster
+    "ihc.ru",
+    "fastvps.ru", // IHC, FastVPS
     "citilink.ru",
     "mvideo.ru",
     "sbermegamarket.ru",
@@ -349,6 +436,11 @@ var hostPools = {
     "detmir.ru",
     "sportmaster.ru",
     "letoile.ru",
+    "dns-shop.ru",
+    "technopark.ru",
+    "nix.ru",
+    "aliexpress.ru",
+    "joom.com", // Marketplace accessible in RU
     "gazeta.ru",
     "rbc.ru",
     "kommersant.ru",
@@ -360,18 +452,31 @@ var hostPools = {
     "rambler.ru",
     "lenta.ru",
     "rg.ru",
+    "kp.ru",
+    "mk.ru",
+    "izvestia.ru",
+    "iz.ru",
+    "vedomosti.ru",
     "2gis.ru",
     "maps.yandex.ru",
-    "gosuslugi.ru",
-    "mos.ru",
-    "nalog.ru",
-    "pfr.gov.ru",
+    "championat.com",
+    "sports.ru",
+    "matchtv.ru",
+    "livejournal.com",
+    "pikabu.ru",
+    "habr.com", // Dev community RU
+    "vc.ru",
+    "spark.ru",
+    "ruvds.com", // RuVDS hosting
+    "vdsina.ru", // VDSina
+    "gcorelabs.com", // Gcore Labs
 
     // 🔵 CDN-infra
     "gcore.com",
     "api.gcore.com",
     "cdn.gcore.com",
     "g.gcdn.co",
+    "gcdn.co",
     "bunny.net",
     "b-cdn.net",
     "storage.bunnycdn.com",
@@ -404,11 +509,20 @@ var hostPools = {
     "xbox.com",
     "xboxlive.com",
     "microsoft.com",
+    "trafficmanager.net",
     "icloud.com",
     "cdn-apple.com",
     "mzstatic.com",
     "apple.com",
     "appleid.apple.com",
+    "limelight.com",
+    "llnwd.net",
+    "edg.io",
+    "stackpathdns.com",
+    "cachefly.net",
+    "imperva.com",
+    "incapsula.com", // Imperva/Incapsula
+    "sucuri.net", // Sucuri CDN/WAF
 
     // 🟡 Tech-neutral
     "github.com",
@@ -417,6 +531,7 @@ var hostPools = {
     "codeload.github.com",
     "github.githubassets.com",
     "avatars.githubusercontent.com",
+    "releases.githubusercontent.com",
     "gitlab.com",
     "bitbucket.org",
     "cdn.jsdelivr.net",
@@ -431,6 +546,10 @@ var hostPools = {
     "ftp.debian.org",
     "launchpad.net",
     "snapcraft.io",
+    "alpinelinux.org",
+    "archlinux.org", // Popular Linux distros
+    "centos.org",
+    "fedoraproject.org",
     "steamstatic.com",
     "steamcontent.com",
     "steampowered.com",
@@ -461,13 +580,25 @@ var hostPools = {
     "ovh.net",
     "ovh.com",
     "gra-g1.ovh.net",
+    "digitalocean.com",
+    "do.co",
+    "linode.com",
+    "vultr.com",
     "dropbox.com",
     "dropboxstatic.com",
     "dropboxapi.com",
     "notion.so",
-    "notionusercontent.com", // Notion (accessible in RU)
+    "notionusercontent.com",
     "zoom.us",
-    "zmtr.cn", // Zoom (accessible in RU)
+    "zmtr.cn",
+    "docker.com",
+    "hub.docker.com", // Docker Hub
+    "registry-1.docker.io",
+    "quay.io", // Red Hat container registry
+    "ghcr.io", // GitHub Container Registry
+    "jetbrains.com", // JetBrains (popular in RU dev)
+    "plugins.jetbrains.com",
+    "download.jetbrains.com",
 
     // 🟠 Asian CDN
     "tencentcs.com",
@@ -480,22 +611,22 @@ var hostPools = {
     "huaweicloud.com",
     "hwcdn.net",
     "baidu.com",
-    "bdstatic.com", // Baidu CDN
+    "bdstatic.com",
+    "bceloss.com",
   ],
 
   /* ──────────────────────────────────────────────────────────────────────────
-   * DTLS 1.3  —  хосты/сервисы, использующие DTLS (WebRTC, STUN/TURN)
+   * DTLS 1.3 — хосты/сервисы, работающие с DTLS (WebRTC, STUN/TURN)
    *
-   * ⚠ ИСКЛЮЧЕНИЯ: stun.l.google.com и похожие — IP Google (74.125.x.x,
-   *   172.217.x.x) частично блокируются и не подходят для пула.
-   * ⚠ ИСКЛЮЧЕНИЯ: stun.cloudflare.com — Cloudflare в блок-листах.
-   * ⚠ ИСКЛЮЧЕНИЯ: stun.telegram.org / turn.telegram.org — Telegram сейчас
-   *   троттлится; ожидается возможная полная блокировка.
-   * Рекомендуется не добавлять серверы с неопределённой доступностью.
+   * ⚠ ИСКЛЮЧЕНО: stun.l.google.com и варианты — IP-адреса Google (74.125.x.x,
+   *   172.217.x.x) заблокированы ТСПУ в России как часть блокировки YouTube.
+   * ⚠ ИСКЛЮЧЕНО: stun.cloudflare.com — Cloudflare заблокирован в РФ.
+   * ⚠ ИСКЛЮЧЕНО: stun.telegram.org / turn.telegram.org — Telegram CDN
+   *   троттлится; полная блокировка ожидается в апреле 2026.
    * ────────────────────────────────────────────────────────────────────────── */
   dtls: [
-    // 🟢 RU-domestic STUN/TURN (operators and services)
-    "turn.yandex.net", // Yandex Telemost (video conf)
+    // 🟢 RU-domestic STUN/TURN (операторы и сервисы)
+    "turn.yandex.net", // Yandex Telemost (видеоконференции)
     "stun.yandex.net",
     "stun1.yandex.net",
     "telemost.yandex.ru",
@@ -505,7 +636,7 @@ var hostPools = {
     "rtc.vk.com",
     "stun.mail.ru",
     "turn.mail.ru",
-    "stun.sipnet.ru", // Sipnet (RU SIP provider)
+    "stun.sipnet.ru", // Sipnet (RU SIP провайдер)
     "stun.sipnet.net",
     "stun.zadarma.com", // Zadarma (RU-friendly VoIP)
     "turn.zadarma.com",
@@ -515,9 +646,12 @@ var hostPools = {
     "stun.mts.ru",
     "stun.megafon.ru",
     "stun.rostelecom.ru",
+    "stun.tele2.ru",
+    "stun.sber.ru", // Сбер WebRTC (SberJazz)
 
-    // 🔵 Well-known public STUN (globally routed, not blocked in RU)
-    "stun.stunprotocol.org", // RFC-compliant, maintained by volunteers
+    // 🔵 Публичные STUN-серверы (глобальная маршрутизация, не заблокированы в РФ)
+    "stun.stunprotocol.org", // RFC-совместимый, поддерживается волонтёрами
+    "stunserver.stunprotocol.org",
     "stun.voip.ipp2p.com",
     "stun.voipstunt.com",
     "stun.voipbuster.com",
@@ -527,6 +661,8 @@ var hostPools = {
     "stun.voxgratia.org",
     "stun.voys.nl",
     "stun.voztele.com",
+    "stun.voipzoom.com",
+    "stun.vopium.com",
     "stun.ippi.fr",
     "stun.antisip.com",
     "stun.freecall.com",
@@ -535,6 +671,7 @@ var hostPools = {
     "stun.counterpath.net",
     "stun.softjoys.com",
     "stun.sipgate.net",
+    "stun.sipgate.net:10000",
     "stun.sip.us",
     "stun.ekiga.net",
     "stun.ideasip.com",
@@ -549,14 +686,22 @@ var hostPools = {
     "stun.webcalldirect.com",
     "stun.wwdl.net",
     "stun.yesdates.com",
+    "stun.yesss.at",
     "stun.zoiper.com",
     "stun01.sipphone.com",
     "stun1.faktortel.com.au",
     "stun.noc.ams-ix.net",
-    "stun.voipzoom.com",
+    "stun.xtratelecom.es",
+    "stun.wifirst.net",
+    "stun.whoi.edu",
+    "stun.zadv.com",
+    "stun.zentauron.de",
+    "stun.voztovoice.org",
+    "stun1.voiceeclipse.net",
+    "stun.f.haeder.net",
 
-    // 🟡 Open-source / hosted WebRTC infrastructure
-    "meet.jit.si", // Jitsi Meet — open video conf, not blocked
+    // 🟡 Open-source / hosted WebRTC инфраструктура
+    "meet.jit.si", // Jitsi Meet — открытый видеоконференс, не заблокирован
     "stun.jit.si",
     "turn.jit.si",
     "8x8.vc",
@@ -573,27 +718,29 @@ var hostPools = {
     "stun.us1.twilio.com",
     "stun.ie1.twilio.com",
     "stun.au1.twilio.com",
+    "stun.us2.twilio.com",
     "stun.nexmo.com",
     "stun.vonage.com",
     "global.stun.bandwidth.com",
     "stun.plivo.com",
+    "stun.signalwire.com",
+    "stun.livekit.cloud", // LiveKit WebRTC infrastructure
+    "stun.metered.ca", // Metered.ca STUN
 
-    // 🟠 TURN relays (free tiers, not blocked in RU)
+    // 🟠 TURN-реле (бесплатные тиры, не заблокированы в РФ)
     "openrelay.metered.ca", // OpenRelay — free, 500 MB/mo
     "coturn.net",
     "freestun.net", // freestun.net:3479 — free STUN/TURN
     "relay.webwormhole.io",
-    "stun.f.haeder.net",
-    "stunserver.stunprotocol.org",
+    "expressturn.com", // ExpressTURN — free tier 1000 GB/mo
   ],
 
   /* ──────────────────────────────────────────────────────────────────────────
-   * SIP REGISTER  —  SIP-регистраторы и прокси-серверы
-   * Текстовый UDP-протокол; имя хоста включается прямо в заголовки REGISTER,
-   * поэтому мы кодируем домен в начале CPS-пакета для правдоподобия.
+   * SIP REGISTER (UDP 5060 / TLS 5061)
+   * Российские и международные SIP-регистраторы для имитации VoIP-трафика.
    * ────────────────────────────────────────────────────────────────────────── */
   sip: [
-    // 🟢 RU mobile operators (SIP trunks, required by law to work)
+    // 🟢 RU mobile operators (SIP trunks, обязаны работать по закону)
     "sip.beeline.ru",
     "voip.beeline.ru",
     "sip.mts.ru",
@@ -607,35 +754,51 @@ var hostPools = {
     "sip.mtt.ru",
     "voip.mtt.ru", // MTT Telecom (RU carrier)
 
-    // 🟢 RU SIP / cloud PBX providers
+    // 🟢 RU SIP / cloud PBX провайдеры
     "sip.vk.com",
     "sip.yandex.ru",
     "sip.mail.ru",
     "voip.sberbank.ru",
+    "sip.vats.sber.ru", // Сбер ВАТС
     "sip.tbank.ru",
     "sip.sipnet.ru",
     "sip.sipnet.net",
+    "sip2.sipnet.ru",
     "sip.mango-office.ru",
     "pbx.mango-office.ru",
     "sip.zadarma.com",
     "pbx.zadarma.com",
-    "sip.gravitel.ru",
-    "sip.onlinepbx.ru",
+    "sip.gravitel.ru", // Гравитель
+    "sip.onlinepbx.ru", // OnlinePBX
     "sip.uis.ru",
     "pbx.uis.ru",
-    "sip.comagic.ru",
+    "sip.comagic.ru", // CoMagic
     "sip.binotel.ru",
-    "sip.novofon.ru",
+    "sip.novofon.ru", // Novofon (ex-Zadarma RU)
     "sip.megacall.ru",
     "sip.zebra-telecom.ru",
-    "sip.obit.ru",
+    "sip.obit.ru", // Obit (Сибирь/Урал)
     "sip.mtsglobaltelecom.ru",
-    "sip.vats.sber.ru",
-    "pbx.rt.ru", // Rostelecom PBX
+    "pbx.rt.ru", // Ростелеком PBX
+    "sip.telfin.ru", // Телфин
+    "sip.uiscom.ru",
+    "sip.voxlink.ru",
+    "sip.datafox.ru", // DataFox
+    "sip.sipmarket.net", // SIPmarket
+    "sip.ngs.ru", // НГС (Новосибирск)
+    "sip.kolabora.com", // Колабора
+    "sip.sipuni.com", // SIPuni
+    "sip.voximplant.com", // Voximplant (облачная платформа)
+    "sip.exolve.ru", // MTS Exolve
+    "sip.dialpad.ru",
+    "sip.oblako.ru", // Облако (RU cloud PBX)
+    "pbx.onlinesim.ru",
+    "sip.onlinesim.ru",
+    "sip.iptel.org", // iptel.org (open SIP registrar)
 
-    // 🟡 International SIP (accessible from RU, commonly used)
+    // 🟡 Международные SIP (доступны из РФ, широко используемые)
     "sip2sip.info",
-    "sip.linphone.org", // Linphone open-source client registrar
+    "sip.linphone.org", // Linphone open-source registrar
     "proxy.sipthor.net",
     "sip.sipthor.net",
     "sip.antisip.com",
@@ -653,8 +816,11 @@ var hostPools = {
     "sip.microsip.org",
     "asterisk.org",
     "sip.asterisk.org",
+    "sip.kamailio.org", // Kamailio open-source SIP
+    "sip.opensips.org", // OpenSIPS
+    "sip.freeswitch.org", // FreeSWITCH
 
-    // 🟠 Enterprise / cloud PBX (EU/US, accessible from RU)
+    // 🟠 Enterprise / cloud PBX (EU/US, доступны из РФ)
     "sip.vonage.com",
     "sip.ringcentral.com",
     "sip.8x8.com",
@@ -667,23 +833,118 @@ var hostPools = {
     "sip.messagebird.com",
     "sip.signalwire.com",
     "sip.did.telnyx.com",
+    "sip.livekit.cloud",
+    "sip.dialpad.com",
+    "sip.aircall.io",
+    "sip.3cx.com", // 3CX hosted SIP
   ],
 };
 
-// ── core helpers ──────────────────────────────────────────────────────────────
+/* ── Browser Fingerprint ───────────────────────────────────────────────────── */
 
 /**
- * getHost(profile) — возвращает текущий пользовательский хост (если введён),
- * иначе выбирает случайный хост из пула, соответствующего профилю.
- * При неизвестном профиле используется пул TLS/HTTP3 по умолчанию.
+ * Таблица реальных размеров UDP payload по браузерам и протоколам.
+ *
+ * Источники: RFC 9000 §14.1, Chromium quiche, исследования перехваченного трафика.
+ *
+ *   qi  — QUIC Initial (Long Header 0xC0-0xC3)
+ *          Chrome/Edge: 1250 (PADDING frame до фиксированного размера)
+ *          Firefox:     1200–1252 (адаптируется, минимум RFC 9000)
+ *          Safari:      1250 или 1252 (iOS 15+ измерения)
+ *
+ *   q0  — QUIC 0-RTT Early Data (Long Header 0xD0-0xD3)
+ *          Зависит от данных; выравнивается по Initial-границе либо
+ *          идёт на максимум MTU (~1350 байт для большого GET).
+ *
+ *   h3  — HTTP/3 DATA после хендшейка
+ *          Браузеры стремятся использовать MTU по максимуму: ~1350 байт
+ *          (MTU 1500 − 20 IP − 8 UDP − ~122 QUIC/TLS overhead).
+ *
+ *   tls — TLS 1.3 Client Hello ("голый" TLS поверх TCP)
+ *          512–800 байт; Chrome выравнивает до кратного 128 байт.
+ *
+ *   nx  — WireGuard Noise_IK Initiation
+ *          Строго 148 байт без padding. При включённом fp добивается до 1200–1250.
+ *
+ *   dtls — DTLS 1.2/1.3 Client Hello (WebRTC)
+ *           Браузеры держат < 1200 байт для исключения IP-фрагментации.
+ *
+ * Формат: [min, max] байт UDP payload (без UDP/IP заголовков).
  */
-function getHost(profile) {
-  var elem = document.getElementById("customHost");
-  var custom = elem ? elem.value.trim() : "";
-  if (custom) return custom;
-  var pool = hostPools[profile] || hostPools.tls_client_hello;
-  return pool[rnd(0, pool.length - 1)];
-}
+var BFP = {
+  //           qi              q0              h3              tls           nx              dtls
+  chrome: {
+    qi: [1250, 1250],
+    q0: [1250, 1350],
+    h3: [1250, 1350],
+    tls: [512, 800],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+  edge: {
+    qi: [1250, 1250],
+    q0: [1250, 1350],
+    h3: [1250, 1350],
+    tls: [512, 800],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+  firefox: {
+    qi: [1200, 1252],
+    q0: [1200, 1300],
+    h3: [1200, 1350],
+    tls: [512, 700],
+    nx: [1200, 1250],
+    dtls: [1050, 1200],
+  },
+  safari: {
+    qi: [1250, 1252],
+    q0: [1250, 1300],
+    h3: [1250, 1350],
+    tls: [512, 750],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+
+  // Яндекс Браузер — базируется на Chromium/quiche, но с оптимизациями для
+  // российской инфраструктуры и собственных сервисов (Поиск, Дзен, Видео).
+  //
+  // Два суб-профиля:
+  //   "desktop" — поведение десктопного Яндекс Браузера.
+  //               QUIC Initial жёстко 1250 байт (как актуальный Chromium).
+  //               DATA-пакеты HTTP/3 стремятся к максимуму MTU: 1350 байт.
+  //
+  //   "mobile"  — мобильный Яндекс Браузер / Turbo-прокси режим.
+  //               QUIC Initial: 1232 байт (кратно 16, удобно для AES).
+  //               0-RTT и DATA: 1250–1350 байт.
+  //
+  // ⚠ НЕСТАБИЛЬНЫЙ ПРОФИЛЬ: Параметры получены эмпирически и могут меняться
+  //   между версиями браузера.
+  yandex_desktop: {
+    qi: [1250, 1250],
+    q0: [1250, 1350],
+    h3: [1350, 1350],
+    tls: [512, 800],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+  yandex_mobile: {
+    qi: [1232, 1232],
+    q0: [1250, 1350],
+    h3: [1350, 1350],
+    tls: [512, 800],
+    nx: [1200, 1250],
+    dtls: [1100, 1200],
+  },
+};
+
+/**
+ * YANDEX_UNSTABLE_PROFILES — профили, помеченные как нестабильные.
+ * Используется в UI для отображения предупреждения.
+ */
+var YANDEX_UNSTABLE_PROFILES = ["yandex_desktop", "yandex_mobile"];
+
+/* ── Pure utility functions ─────────────────────────────────────────────────── */
 
 function rnd(a, b) {
   return Math.floor(Math.random() * (b - a + 1)) + a;
@@ -729,192 +990,70 @@ function rRange(base, spread) {
   return s + "-" + (s + rnd(1000, 50000));
 }
 
-// ── protocol generators ───────────────────────────────────────────────────────
-
 /**
- * mkQUICi — QUIC Initial (RFC 9000, Long Header 0xC0-0xC3)
+ * splitPad(n, tag) — разбивает N байт паддинга на один или несколько CPS-тегов,
+ * строго соблюдая лимит AmneziaWG: не более 1000 байт на каждый тег <r>/<rc>/<rd>.
  *
- * Long Header layout:
- *   1B flags | 4B version | 1B dcid_len | dcid | 1B scid_len | scid
- *   | 1B token_len | token | 4B reserved/PN
+ *   n    — суммарный размер паддинга в байтах
+ *   tag  — 'r' | 'rc' | 'rd'  (по умолчанию 'r')
  *
- * Все части чётные по определению:
- *   hexPad(x, n) → 2n символов; rh(k) → 2k символов.
+ * Примеры:
+ *   splitPad(1200)       → "<r 1000><r 200>"
+ *   splitPad(2500)       → "<r 1000><r 1000><r 500>"
+ *   splitPad(64, 'rc')   → "<rc 64>"
+ *   splitPad(0)          → ""
  */
-// ── Browser Fingerprint ───────────────────────────────────────────────────────
-
-/**
- * Таблица реальных размеров UDP payload по браузерам и протоколам.
- *
- * Источники: RFC 9000 §14.1, Chromium quiche, исследования перехваченного трафика.
- *
- *   quicInitial  — QUIC Initial (Long Header 0xC0-0xC3)
- *                  Chrome/Edge: 1250 (PADDING frame до фиксированного размера)
- *                  Firefox:     1200–1252 (адаптируется, минимум RFC 9000)
- *                  Safari:      1250 или 1252 (iOS 15+ измерения)
- *
- *   quic0rtt     — QUIC 0-RTT Early Data (Long Header 0xD0-0xD3)
- *                  Зависит от данных; выравнивается по Initial-границе либо
- *                  идёт на максимум MTU (~1350 байт для большого GET).
- *
- *   http3data    — HTTP/3 DATA после хендшейка
- *                  Браузеры стремятся использовать MTU по максимуму: ~1350 байт
- *                  (MTU 1500 − 20 IP − 8 UDP − ~122 QUIC/TLS overhead).
- *
- *   tls          — TLS 1.3 Client Hello ("голый" TLS поверх TCP)
- *                  512–800 байт; Chrome выравнивает до кратного 128 байт.
- *                  Внутри QUIC Initial этот фрейм всегда упакован в 1250-байтный пакет.
- *
- *   noise        — WireGuard Noise_IK Initiation
- *                  Строго 148 байт без padding. Чтобы не выдать себя по размеру,
- *                  при имитации браузерного трафика нужно добить до 1200–1250 байт.
- *
- *   dtls         — DTLS 1.2/1.3 Client Hello (WebRTC)
- *                  Браузеры держат < 1200 байт чтобы избежать IP-фрагментации
- *                  (DTLS плохо справляется с потерей фрагментов на хендшейке).
- *
- * Формат: [min, max] байт UDP payload (без UDP/IP заголовков).
- */
-var BFP = {
-  //            quicInitial   quic0rtt      http3data     tls           noise         dtls
-  chrome: {
-    qi: [1250, 1250],
-    q0: [1250, 1350],
-    h3: [1250, 1350],
-    tls: [512, 800],
-    nx: [1200, 1250],
-    dtls: [1100, 1200],
-  },
-  edge: {
-    qi: [1250, 1250],
-    q0: [1250, 1350],
-    h3: [1250, 1350],
-    tls: [512, 800],
-    nx: [1200, 1250],
-    dtls: [1100, 1200],
-  },
-  firefox: {
-    qi: [1200, 1252],
-    q0: [1200, 1300],
-    h3: [1200, 1350],
-    tls: [512, 700],
-    nx: [1200, 1250],
-    dtls: [1050, 1200],
-  },
-  safari: {
-    qi: [1250, 1252],
-    q0: [1250, 1300],
-    h3: [1250, 1350],
-    tls: [512, 750],
-    nx: [1200, 1250],
-    dtls: [1100, 1200],
-  },
-
-  // Яндекс Браузер — базируется на Chromium/quiche, но с оптимизациями для
-  // российской инфраструктуры и собственных сервисов (Поиск, Дзен, Видео).
-  //
-  // Два суб-профиля, управляемых через yandexStyle:
-  //
-  //   "desktop" — поведение десктопного Яндекс Браузера.
-  //               QUIC Initial жёстко 1250 байт (как актуальный Chromium).
-  //               DATA-пакеты HTTP/3 стремятся к максимуму MTU: 1350 байт —
-  //               плотный PADDING для маскировки структуры запросов к API Яндекса.
-  //
-  //   "mobile"  — мобильный Яндекс Браузер / Turbo-прокси режим.
-  //               Более агрессивная защита от фрагментации в нестабильных сетях.
-  //               QUIC Initial: 1232 байт (стандартное значение при ограниченном MTU,
-  //               кратно 16 — удобно для AES и выравнивания QUIC Packet Number).
-  //               0-RTT и DATA: 1250–1350 байт.
-  //
-  // ⚠ НЕСТАБИЛЬНЫЙ ПРОФИЛЬ: Параметры получены эмпирически и могут меняться
-  //   между версиями браузера. Используйте Chrome/Firefox при возможности.
-  yandex_desktop: {
-    qi: [1250, 1250],
-    q0: [1250, 1350],
-    h3: [1350, 1350],
-    tls: [512, 800],
-    nx: [1200, 1250],
-    dtls: [1100, 1200],
-  },
-  yandex_mobile: {
-    qi: [1232, 1232],
-    q0: [1250, 1350],
-    h3: [1350, 1350],
-    tls: [512, 800],
-    nx: [1200, 1250],
-    dtls: [1100, 1200],
-  },
-};
-
-/**
- * YANDEX_UNSTABLE_PROFILES — профили, помеченные как нестабильные.
- * Используется в UI для отображения предупреждения.
- */
-var YANDEX_UNSTABLE_PROFILES = ["yandex_desktop", "yandex_mobile"];
-
-/** toggleBrowserFp — показывает/скрывает блок выбора браузера. */
-function toggleBrowserFp() {
-  var cbx = document.getElementById("useBrowserFp");
-  var wrap = document.getElementById("browserFpWrap");
-  if (wrap) wrap.style.display = cbx && cbx.checked ? "block" : "none";
-  toggleYandexWarn();
+function splitPad(n, tag) {
+  tag = tag || "r";
+  n = Math.max(0, Math.floor(n));
+  if (n === 0) return "";
+  var out = "";
+  while (n > 1000) {
+    out += "<" + tag + " 1000>";
+    n -= 1000;
+  }
+  out += "<" + tag + " " + n + ">";
+  return out;
 }
 
 /**
- * toggleYandexWarn — показывает синее предупреждение если выбран
- * нестабильный профиль Яндекс Браузера.
- */
-function toggleYandexWarn() {
-  var el = document.getElementById("browserFpProfile");
-  var warn = document.getElementById("yandexFpWarn");
-  if (!warn) return;
-  var isYandex = el && YANDEX_UNSTABLE_PROFILES.indexOf(el.value) !== -1;
-  var fpActive = (function () {
-    var cbx = document.getElementById("useBrowserFp");
-    return cbx && cbx.checked;
-  })();
-  warn.style.display = isYandex && fpActive ? "flex" : "none";
-}
-
-/** getBrowserFpProfile — активный профиль или "" если отключён. */
-function getBrowserFpProfile() {
-  var cbx = document.getElementById("useBrowserFp");
-  if (!cbx || !cbx.checked) return "";
-  var el = document.getElementById("browserFpProfile");
-  return el ? el.value : "";
-}
-
-/**
- * getFpRange(slot) — возвращает [min, max] байт для текущего профиля и слота.
- * slot: "qi" | "q0" | "h3" | "tls" | "nx" | "dtls"
- * Если fp отключён — возвращает null.
- */
-function getFpRange(slot) {
-  var profile = getBrowserFpProfile();
-  return (BFP[profile] && BFP[profile][slot]) || null;
-}
-
-/**
- * calcPadding(headerB, extraB, range, iv) — вычисляет размер <r N> padding.
+ * calcPadding(headerB, extraB, range, iv, mtu) — вычисляет размер паддинга в байтах.
  *
- *   headerB — байты уже занятые тегом <b 0x...>
- *   extraB  — байты от других тегов с фиксированной длиной (например <rc N>)
+ *   headerB — байты, занятые тегом <b 0x...>
+ *   extraB  — байты от других фиксированных тегов (например <rc N>)
  *   range   — [min, max] из BFP или null
- *   iv      — intensity multiplier (fallback)
+ *   iv      — intensity multiplier (fallback когда range=null)
+ *   mtu     — MTU интерфейса (по умолчанию 1500); ограничивает максимум
  *
- * Если range задан: добивает occupied до min, с jitter до max.
- * Если range null: обычный энтропийный размер.
+ * Если range задан: добивает occupied до min, с jitter до max, но не превышает MTU.
+ * Если range null: обычный энтропийный размер (20-80 * iv, но ≤ 500 и ≤ MTU).
+ *
+ * ВАЖНО: возвращаемое значение — суммарный паддинг, который может превышать 1000.
+ * Используй splitPad() для разбивки на CPS-теги при рендере.
  */
-function calcPadding(headerB, extraB, range, iv) {
-  var occupied = headerB + extraB;
-  if (!range) return Math.min(rnd(20, 80) * iv, 500);
+function calcPadding(headerB, extraB, range, iv, mtu) {
+  mtu = mtu != null ? mtu : 1500;
+  var maxPad = Math.max(0, mtu - headerB - extraB);
 
+  if (!range) {
+    return Math.min(rnd(20, 80) * iv, 500, maxPad);
+  }
+
+  var occupied = headerB + extraB;
   var min = range[0],
     max = range[1];
-  var needed = Math.max(0, min - occupied);
-  // jitter в пределах диапазона, но не выходить за max
-  var jitter = Math.max(0, Math.min(max - min, max - occupied - needed, 20));
-  return needed + (jitter > 0 ? rnd(0, jitter) : 0);
+
+  // Ограничиваем целевой диапазон MTU
+  var clampedMin = Math.min(min, mtu);
+  var clampedMax = Math.min(max, mtu);
+
+  var needed = Math.max(0, clampedMin - occupied);
+  var jitter = Math.max(
+    0,
+    Math.min(clampedMax - clampedMin, clampedMax - occupied - needed, 20),
+  );
+  var pad = needed + (jitter > 0 ? rnd(0, jitter) : 0);
+  return Math.min(pad, maxPad);
 }
 
 /**
@@ -925,12 +1064,15 @@ function alignTo128(n) {
   return Math.ceil(n / 128) * 128;
 }
 
-/** getT(id) — читает состояние чекбокса тега. */
-function getT(id) {
-  return (document.getElementById(id) || { checked: true }).checked;
-}
-
-// ── Protocol generators ───────────────────────────────────────────────────────
+/* ── Protocol generators ─────────────────────────────────────────────────────
+ *
+ * СОГЛАШЕНИЕ:
+ *   - Все генераторы принимают (iv) — intensity value [1..3+].
+ *   - DOM-читающие функции (getT, getHost, getFpRange, getUserMTU)
+ *     определены в ui-script.js и доступны глобально к моменту вызова.
+ *   - Для паддинга ВСЕГДА используем splitPad(pad), а НЕ "<r " + pad + ">",
+ *     чтобы не нарушать лимит AmneziaWG: не более 1000 байт на один тег.
+ * ─────────────────────────────────────────────────────────────────────────── */
 
 /**
  * mkQUICi — QUIC Initial (RFC 9000, Long Header 0xC0-0xC3)
@@ -971,9 +1113,10 @@ function mkQUICi(iv) {
     "mkQUICi",
   );
 
+  var mtu = getUserMTU();
   var headerB = hex.length / 2;
   var extraB = getT("useTagRC") ? sniRc : 0;
-  var pad = calcPadding(headerB, extraB, getFpRange("qi"), iv);
+  var pad = calcPadding(headerB, extraB, getFpRange("qi"), iv, mtu);
 
   return (
     "<b 0x" +
@@ -982,7 +1125,7 @@ function mkQUICi(iv) {
     (getT("useTagRC") ? "<rc " + sniRc + ">" : "") +
     (getT("useTagC") ? "<c>" : "") +
     (getT("useTagT") ? "<t>" : "") +
-    (getT("useTagR") ? "<r " + pad + ">" : "")
+    (getT("useTagR") ? splitPad(pad) : "")
   );
 }
 
@@ -1013,16 +1156,17 @@ function mkQUIC0(iv) {
     "mkQUIC0",
   );
 
+  var mtu = getUserMTU();
   var headerB = hex.length / 2;
   var extraB = getT("useTagRC") ? ticketHint : 0;
-  var pad = calcPadding(headerB, extraB, getFpRange("q0"), iv);
+  var pad = calcPadding(headerB, extraB, getFpRange("q0"), iv, mtu);
 
   return (
     "<b 0x" +
     hex +
     ">" +
     (getT("useTagT") ? "<t>" : "") +
-    (getT("useTagR") ? "<r " + pad + ">" : "") +
+    (getT("useTagR") ? splitPad(pad) : "") +
     (getT("useTagRC") ? "<rc " + ticketHint + ">" : "") +
     (getT("useTagC") ? "<c>" : "")
   );
@@ -1038,7 +1182,7 @@ function mkQUIC0(iv) {
  *   1B  hs_type        0x01 (ClientHello)
  *   3B  hs_length      (record_length − 4..9)
  *   2B  client_version 0x0303 (TLS 1.2 legacy field)
- *  32B  client_random
+ *  32B  client random
  *
  * Размер "голого" TLS: 512–800 байт.
  * Chrome выравнивает итоговый ClientHello до кратного 128 байт (padding ext 0x0015).
@@ -1061,7 +1205,9 @@ function mkTLS(iv) {
       ? alignTo128(baseLen)
       : baseLen;
   var hsLen = recLen - rnd(4, 9);
-  var rLen = Math.min(rnd(20, 60) * iv, 300);
+
+  var mtu = getUserMTU();
+  var rLen = Math.min(rnd(20, 60) * iv, 300, Math.max(0, mtu - 44 - sniRc));
 
   var hex = assertEvenHex(
     "160301" + // 3B  record type (0x16) + legacy version (0x0301)
@@ -1078,7 +1224,7 @@ function mkTLS(iv) {
     hex +
     ">" +
     (getT("useTagRC") ? "<rc " + sniRc + ">" : "") +
-    (getT("useTagR") ? "<r " + rLen + ">" : "") +
+    (getT("useTagR") ? splitPad(rLen) : "") +
     (getT("useTagC") ? "<c>" : "") +
     (getT("useTagT") ? "<t>" : "")
   );
@@ -1098,21 +1244,21 @@ function mkTLS(iv) {
  *   = 148 байт
  *
  * DPI легко идентифицирует Noise по фиксированному размеру 148 байт.
- * При включённом браузерном fp добиваем до 1200–1250 байт через <r N>,
+ * При включённом браузерном fp добиваем до 1200–1250 байт через splitPad(<r>),
  * имитируя QUIC-обёртку.
  */
 function mkNoise(iv) {
   var rcLen = rnd(4, 12);
 
-  // Noise_IK Initiation: 4 поля, итого 4+4+32+48+28 = 116 байт в <b> тегах
-  // (MAC1 + MAC2 = ещё 32 байта — добавляем отдельным <b>)
-  var headerB = 4 + 4 + 32 + 48 + 28 + 32; // = 148
+  // Noise_IK Initiation: итого 4+4+32+48+28+16+16 = 148 байт
+  var headerB = 148;
 
+  var mtu = getUserMTU();
   var extraB = getT("useTagRC") ? rcLen : 0;
   var range = getFpRange("nx");
   var pad = range
-    ? calcPadding(headerB, extraB, range, iv)
-    : Math.min(rnd(10, 40) * iv, 200);
+    ? calcPadding(headerB, extraB, range, iv, mtu)
+    : Math.min(rnd(10, 40) * iv, 200, Math.max(0, mtu - headerB - extraB));
 
   return (
     "<b 0x01000000" +
@@ -1130,7 +1276,7 @@ function mkNoise(iv) {
     "<b 0x" +
     rh(32) +
     ">" + // 32B MAC1 + MAC2
-    (getT("useTagR") ? "<r " + pad + ">" : "") +
+    (getT("useTagR") ? splitPad(pad) : "") +
     (getT("useTagT") ? "<t>" : "") +
     (getT("useTagRC") ? "<rc " + rcLen + ">" : "")
   );
@@ -1153,7 +1299,7 @@ function mkNoise(iv) {
  *  32B  random
  *
  * Браузеры держат ClientHello < 1200 байт чтобы исключить IP-фрагментацию:
- * DTLS не умеет переcобирать фрагменты на этапе хендшейка.
+ * DTLS не умеет пересобирать фрагменты на этапе хендшейка.
  * BFP-диапазон "dtls": 1050–1200 байт.
  */
 function mkDTLS(iv) {
@@ -1176,9 +1322,10 @@ function mkDTLS(iv) {
     "mkDTLS",
   );
 
+  var mtu = getUserMTU();
   var headerB = hex.length / 2;
   var extraB = getT("useTagRC") ? sniRc : 0;
-  var pad = calcPadding(headerB, extraB, getFpRange("dtls"), iv);
+  var pad = calcPadding(headerB, extraB, getFpRange("dtls"), iv, mtu);
 
   return (
     "<b 0x" +
@@ -1187,7 +1334,7 @@ function mkDTLS(iv) {
     (getT("useTagRC") ? "<rc " + sniRc + ">" : "") +
     (getT("useTagC") ? "<c>" : "") +
     (getT("useTagT") ? "<t>" : "") +
-    (getT("useTagR") ? "<r " + pad + ">" : "")
+    (getT("useTagR") ? splitPad(pad) : "")
   );
 }
 
@@ -1219,17 +1366,18 @@ function mkHTTP3(iv) {
     "mkHTTP3",
   );
 
+  var mtu = getUserMTU();
   var headerB = hex.length / 2;
   var extraB = getT("useTagRC") ? sniLen : 0;
   // HTTP/3 DATA после хендшейка стремится к MTU: используем слот h3 (1250–1350)
-  var pad = calcPadding(headerB, extraB, getFpRange("h3"), iv);
+  var pad = calcPadding(headerB, extraB, getFpRange("h3"), iv, mtu);
 
   return (
     "<b 0x" +
     hex +
     ">" +
     (getT("useTagRC") ? "<rc " + sniLen + ">" : "") +
-    (getT("useTagR") ? "<r " + pad + ">" : "") +
+    (getT("useTagR") ? splitPad(pad) : "") +
     (getT("useTagC") ? "<c>" : "") +
     (getT("useTagT") ? "<t>" : "")
   );
@@ -1263,8 +1411,10 @@ function mkSIP(iv) {
     "mkSIP",
   );
 
+  var mtu = getUserMTU();
+  var headerB = hex.length / 2;
   var rcVal = Math.min(host.length + rnd(8, 24) * iv, 150);
-  var rLen = Math.min(rnd(5, 30) * iv, 120);
+  var rLen = Math.min(rnd(5, 30) * iv, 120, Math.max(0, mtu - headerB - rcVal));
 
   return (
     "<b 0x" +
@@ -1273,23 +1423,26 @@ function mkSIP(iv) {
     (getT("useTagRC") ? "<rc " + rcVal + ">" : "") +
     (getT("useTagC") ? "<c>" : "") +
     (getT("useTagT") ? "<t>" : "") +
-    (getT("useTagR") ? "<r " + rLen + ">" : "")
+    (getT("useTagR") ? splitPad(rLen) : "")
   );
 }
 
 /**
- * Генерирует пакеты энтропии (I2-I5) с учетом выбранных пользователем тегов.
- * Создает смесь из случайных данных, времени и счетчиков для обхода статистического анализа.
+ * mkEntropy — генерирует пакеты энтропии (I2-I5).
+ *
+ * Создаёт смесь из случайных данных, времени и счётчиков для обхода
+ * статистического анализа DPI.
  */
 function mkEntropy(idx, iv) {
-  var rLen = Math.min(rnd(10, 40) * iv, 300),
+  var mtu = getUserMTU();
+  var rLen = Math.min(rnd(10, 40) * iv, 300, Math.max(0, mtu - 20)),
     rcLen = rnd(4, 12),
     rdLen = rnd(4, 8);
 
   var tags = {
     c: getT("useTagC") ? "<c>" : "",
     t: getT("useTagT") ? "<t>" : "",
-    r: getT("useTagR") ? "<r " + rLen + ">" : "",
+    r: getT("useTagR") ? splitPad(rLen) : "",
     rc: getT("useTagRC") ? "<rc " + rcLen + ">" : "",
     rd: getT("useTagRD") ? "<rd " + rdLen + ">" : "",
     b: "",
@@ -1348,12 +1501,12 @@ function genI1(profile, iv) {
   return (m[profile] || m.quic_initial)();
 }
 
-/* ── generate config ── */
-
 /**
- * Основная функция сборки конфигурации.
+ * genCfg — основная функция сборки конфигурации.
+ *
  * Рассчитывает все параметры (H1-H4, S1-S4, Junk, I1-I5) на основе
  * выбранной версии протокола, интенсивности и истории неудачных попыток (iter).
+ * Читает DOM для получения текущих настроек UI.
  */
 function genCfg() {
   var profile = document.getElementById("quicProfile").value;
@@ -1412,401 +1565,3 @@ function genCfg() {
     profile,
   };
 }
-
-// ── rendering ─────────────────────────────────────────────────────────────────
-
-var plabs = {
-  quic_initial: "QUIC Initial",
-  quic_0rtt: "QUIC 0-RTT",
-  tls_client_hello: "TLS 1.3",
-  wireguard_noise: "Noise_IK",
-  dtls: "DTLS 1.3",
-  http3: "HTTP/3",
-  sip: "SIP",
-  random: "Random",
-};
-
-/**
- * Отрисовывает сгенерированные параметры в таблицу на странице.
- * Добавляет визуальные эффекты и пояснения к полям.
- */
-function renderCfg(p) {
-  var tbl = document.getElementById("configTable");
-  tbl.classList.add("shimmer");
-  setTimeout(function () {
-    tbl.classList.remove("shimmer");
-  }, 650);
-  var pn = plabs[p.profile] || p.profile;
-  var html = "";
-
-  if (ver === "2.0") {
-    html += sec("DYNAMIC HEADERS H1–H4", [
-      ["H1", p.h1, "va", "— Init type (диапазон)"],
-      ["H2", p.h2, "va", "— Response type"],
-      ["H3", p.h3, "va", "— Cookie Reply"],
-      ["H4", p.h4, "va", "— Data type"],
-    ]);
-    html += sec("PACKET SIZE PREFIXES S1–S4", [
-      ["S1", p.s1, "vp", "— Init ≤64 B"],
-      [
-        "S2",
-        p.s2,
-        "vp",
-        '— Resp ≤64 B <span style="color:var(--text3);font-size:9px">S1+56≠S2 ✓</span>',
-      ],
-      ["S3", p.s3, "vp", "— Cookie ≤64 B"],
-      ["S4", p.s4, "vp", "— Data ≤32 B"],
-    ]);
-    html += sec("JUNK TRAIN", [
-      ["Jc", p.jc, "vb", "— пакетов"],
-      ["Jmin", p.jmin, "vb", "— min байт"],
-      ["Jmax", p.jmax, "vb", "— max байт"],
-    ]);
-  } else {
-    html += sec("HEADERS H1–H4 (одно значение)", [
-      ["H1", p.h1s, "va", ""],
-      ["H2", p.h2s, "va", ""],
-      ["H3", p.h3s, "va", ""],
-      ["H4", p.h4s, "va", ""],
-    ]);
-    html += sec("PREFIXES S1–S2", [
-      ["S1", p.s1, "vp", "≤64 B"],
-      [
-        "S2",
-        p.s2,
-        "vp",
-        '≤64 B <span style="color:var(--text3);font-size:9px">S1+56≠S2 ✓</span>',
-      ],
-    ]);
-    html += sec("JUNK TRAIN", [
-      ["Jc", p.jc, "vb", ""],
-      ["Jmin", p.jmin, "vb", ""],
-      ["Jmax", p.jmax, "vb", ""],
-    ]);
-  }
-
-  if (ver !== "1.0") {
-    var lbl = "CPS SIGNATURE CHAIN I1–I5";
-    if (ver === "1.5")
-      lbl +=
-        '<span style="color:var(--text3);font-size:9px;margin-left:6px">CLIENT ONLY</span>';
-    html +=
-      '<div class="psec"><div class="pseclabel">' +
-      lbl +
-      '<span class="qbadge">✦ ' +
-      pn +
-      "</span></div>";
-    for (var n = 1; n <= 5; n++) {
-      var i1 = n === 1;
-      html +=
-        '<div class="prow" style="animation-delay:' +
-        n * 0.04 +
-        's">' +
-        '<div class="pkey">I' +
-        n +
-        (i1 ? " ✦" : "") +
-        "</div>" +
-        '<div class="pval ' +
-        (i1 ? "vc" : "vg") +
-        '" style="font-size:10.5px">' +
-        esc(p["i" + n]) +
-        "</div></div>";
-    }
-    html += "</div>";
-  }
-
-  tbl.innerHTML = html;
-  renderPrev(p);
-}
-
-/** Хелпер для создания HTML-секций в таблице параметров */
-function sec(label, rows) {
-  var h = '<div class="psec"><div class="pseclabel">' + label + "</div>";
-  rows.forEach(function (r, idx) {
-    h +=
-      '<div class="prow" style="animation-delay:' +
-      idx * 0.04 +
-      's">' +
-      '<div class="pkey">' +
-      r[0] +
-      "</div>" +
-      '<div class="pval ' +
-      r[2] +
-      '">' +
-      r[1] +
-      (r[3]
-        ? '<span style="color:var(--text3);font-size:10px"> ' + r[3] + "</span>"
-        : "") +
-      "</div></div>";
-  });
-  return h + "</div>";
-}
-
-/** Экранирует HTML-символы для безопасного вывода CPS-строк */
-function esc(s) {
-  return String(s)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
-/** Генерирует текстовый блок [Interface] для предпросмотра конфига */
-function renderPrev(p) {
-  var lines = [];
-  lines.push('<span class="cm"># AmneziaWG ' + ver + "</span>");
-  lines.push('<span class="cm">[Interface]</span>');
-  lines.push(
-    '<span class="cm"># PrivateKey = &lt;ключ&gt;  Address = 10.0.0.2/32</span>',
-  );
-  function kv(k, v) {
-    lines.push(
-      '<span class="kk">' + k + '</span> = <span class="vv">' + v + "</span>",
-    );
-  }
-  if (ver === "2.0") {
-    kv("H1", p.h1);
-    kv("H2", p.h2);
-    kv("H3", p.h3);
-    kv("H4", p.h4);
-    kv("S1", p.s1);
-    kv("S2", p.s2);
-    kv("S3", p.s3);
-    kv("S4", p.s4);
-    kv("Jc", p.jc);
-    kv("Jmin", p.jmin);
-    kv("Jmax", p.jmax);
-    kv("I1", esc(p.i1));
-    kv("I2", esc(p.i2));
-    kv("I3", esc(p.i3));
-    kv("I4", esc(p.i4));
-    kv("I5", esc(p.i5));
-  } else if (ver === "1.5") {
-    kv("H1", p.h1s);
-    kv("H2", p.h2s);
-    kv("H3", p.h3s);
-    kv("H4", p.h4s);
-    kv("S1", p.s1);
-    kv("S2", p.s2);
-    kv("Jc", p.jc);
-    kv("Jmin", p.jmin);
-    kv("Jmax", p.jmax);
-    lines.push('<span class="cm"># I1-I5 только клиент (AWG 1.5):</span>');
-    kv("I1", esc(p.i1));
-    kv("I2", esc(p.i2));
-    kv("I3", esc(p.i3));
-    kv("I4", esc(p.i4));
-    kv("I5", esc(p.i5));
-  } else {
-    kv("H1", p.h1s);
-    kv("H2", p.h2s);
-    kv("H3", p.h3s);
-    kv("H4", p.h4s);
-    kv("S1", p.s1);
-    kv("S2", p.s2);
-    kv("Jc", p.jc);
-    kv("Jmin", p.jmin);
-    kv("Jmax", p.jmax);
-    lines.push('<span class="cm"># I1-I5 не поддерживаются в AWG 1.0</span>');
-  }
-  document.getElementById("previewCode").innerHTML = lines.join("\n");
-}
-
-/** Формирует финальный текст конфигурационного файла для копирования или скачивания */
-function getPlain(p) {
-  var l = [
-    "# AmneziaWG " + ver,
-    "[Interface]",
-    "# PrivateKey = <ключ>",
-    "# Address = 10.0.0.2/32",
-  ];
-  if (ver === "2.0") {
-    l.push("H1 = " + p.h1, "H2 = " + p.h2, "H3 = " + p.h3, "H4 = " + p.h4);
-    l.push("S1 = " + p.s1, "S2 = " + p.s2, "S3 = " + p.s3, "S4 = " + p.s4);
-    l.push("Jc = " + p.jc, "Jmin = " + p.jmin, "Jmax = " + p.jmax);
-    l.push(
-      "I1 = " + p.i1,
-      "I2 = " + p.i2,
-      "I3 = " + p.i3,
-      "I4 = " + p.i4,
-      "I5 = " + p.i5,
-    );
-  } else if (ver === "1.5") {
-    l.push("H1 = " + p.h1s, "H2 = " + p.h2s, "H3 = " + p.h3s, "H4 = " + p.h4s);
-    l.push(
-      "S1 = " + p.s1,
-      "S2 = " + p.s2,
-      "Jc = " + p.jc,
-      "Jmin = " + p.jmin,
-      "Jmax = " + p.jmax,
-    );
-    l.push(
-      "# I1-I5 только клиент:",
-      "I1 = " + p.i1,
-      "I2 = " + p.i2,
-      "I3 = " + p.i3,
-      "I4 = " + p.i4,
-      "I5 = " + p.i5,
-    );
-  } else {
-    l.push("H1 = " + p.h1s, "H2 = " + p.h2s, "H3 = " + p.h3s, "H4 = " + p.h4s);
-    l.push(
-      "S1 = " + p.s1,
-      "S2 = " + p.s2,
-      "Jc = " + p.jc,
-      "Jmin = " + p.jmin,
-      "Jmax = " + p.jmax,
-    );
-  }
-  return l.join("\n");
-}
-
-// ── actions ───────────────────────────────────────────────────────────────────
-
-function generate() {
-  cp = genCfg();
-  renderCfg(cp);
-  var s = document.getElementById("quicProfile");
-  var wrap = document.getElementById("customHostWrap");
-  var hint = document.getElementById("customHostHint");
-  var noHost = s.value === "wireguard_noise";
-  if (wrap) {
-    if (!noHost) wrap.classList.add("show");
-    else wrap.classList.remove("show");
-  }
-  if (hint) {
-    var hintMap = {
-      quic_initial: "QUIC-capable: fastly.net, cdn-apple.com, yastatic.net …",
-      quic_0rtt: "QUIC 0-RTT: fastly.net, s3.amazonaws.com, yastatic.net …",
-      tls_client_hello: "Любой HTTPS-хост: vk.com, github.com, ozon.ru …",
-      dtls: "STUN/TURN-сервер: stun.yandex.net, stun.jit.si …",
-      http3: "HTTP/3-хост: fastly.net, cdn.gcore.com, yandex.net …",
-      sip: "SIP-регистратор: sip.zadarma.com, sip.linphone.org …",
-      random:
-        "Пул выбирается по случайному профилю (опционально укажите свой хост)",
-    };
-    hint.textContent = hintMap[s.value] || "";
-  }
-  var input = document.getElementById("customHost");
-  if (input) {
-    var phMap = {
-      quic_initial: "Хост с QUIC (напр., fastly.net)",
-      quic_0rtt: "Хост с QUIC 0-RTT (напр., cdn-apple.com)",
-      tls_client_hello: "Любой домен (напр., github.com)",
-      dtls: "STUN/TURN-хост (напр., stun.jit.si)",
-      http3: "HTTP/3-домен (напр., vk.com)",
-      sip: "SIP-сервер (напр., sip.zadarma.com)",
-      random: "Свой домен (опционально)",
-    };
-    input.placeholder = phMap[s.value] || "Свой домен";
-  }
-  addLog("✦ Сгенерирован — " + s.options[s.selectedIndex].text, "info");
-}
-
-function setVersion(v, btn) {
-  ver = v;
-  document.querySelectorAll(".tab-btn").forEach(function (b) {
-    b.classList.remove("active");
-  });
-  btn.classList.add("active");
-  if (cp) renderCfg(cp);
-}
-
-function setIntensity(level) {
-  inten = level;
-  var map = { low: "al", medium: "am", high: "ah" };
-  ["low", "medium", "high"].forEach(function (l) {
-    var b = document.getElementById("i" + l.slice(0, 3));
-    b.className = "int-b";
-    if (l === level) b.classList.add(map[l]);
-  });
-  document.getElementById("modeLabel").textContent = level.toUpperCase();
-  if (cp) generate();
-}
-
-function feedback(ok) {
-  if (ok) {
-    addLog("✓ Конфигурация подтверждена!", "ok");
-    iter = 0;
-  } else {
-    iter++;
-    generate();
-    addLog(
-      iter > 3
-        ? "✗ Попытка " + iter + ": HIGH режим, максимальная обфускация..."
-        : "✗ Попытка " + iter + ": перегенерация, усиленные параметры",
-      "bad",
-    );
-  }
-  updateIter();
-}
-
-function updateIter() {
-  document.getElementById("iterCount").textContent = iter;
-  for (var d = 0; d < 5; d++) {
-    var dot = document.getElementById("d" + d);
-    dot.className = "idot";
-    if (d < iter) dot.classList.add(iter > 3 ? "fh" : "fi");
-  }
-}
-
-function addLog(msg, type) {
-  var log = document.getElementById("statusLog");
-  var e = document.createElement("div");
-  e.className = "logent log-" + type;
-  e.textContent = msg;
-  log.insertBefore(e, log.firstChild);
-  while (log.children.length > 4) log.removeChild(log.lastChild);
-}
-
-function copyConfig() {
-  if (!cp) {
-    addLog("⚠ Сначала сгенерируйте конфиг", "bad");
-    return;
-  }
-  var text = getPlain(cp);
-  var btn = document.getElementById("copyBtn");
-  function done() {
-    btn.textContent = "✓ Скопировано!";
-    btn.classList.add("copied");
-    setTimeout(function () {
-      btn.textContent = "📋 Копировать";
-      btn.classList.remove("copied");
-    }, 2000);
-  }
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(text).then(done).catch(fb);
-  } else {
-    fb();
-  }
-  function fb() {
-    var ta = document.createElement("textarea");
-    ta.value = text;
-    document.body.appendChild(ta);
-    ta.select();
-    document.execCommand("copy");
-    document.body.removeChild(ta);
-    done();
-  }
-}
-
-function downloadConfig() {
-  if (!cp) {
-    addLog("⚠ Сначала сгенерируйте конфиг", "bad");
-    return;
-  }
-  var blob = new Blob([getPlain(cp)], { type: "text/plain" });
-  var url = URL.createObjectURL(blob);
-  var a = document.createElement("a");
-  a.href = url;
-  a.download = "amneziawg-" + ver + "-" + Date.now() + ".conf";
-  a.click();
-  URL.revokeObjectURL(url);
-}
-
-function toggleFaq(head) {
-  head.parentElement.classList.toggle("open");
-}
-
-window.addEventListener("DOMContentLoaded", function () {
-  generate();
-});

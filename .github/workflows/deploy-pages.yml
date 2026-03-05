@@ -28,9 +28,13 @@ jobs:
         run: |
           mkdir -p site
           cp index.html site/
-          cp script.js  site/
-
           cp about.html site/
+          cp mergekeys.html site/
+
+          cp script.js  site/
+          cp ui-script.js site/
+          cp mergekeys.js site/
+
           cp -r assets/ site/assets/
           cp -r api/ site/api/
 

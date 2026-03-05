@@ -1,0 +1,930 @@
+<!doctype html>
+<html lang="ru">
+    <head>
+        <meta charset="UTF-8" />
+        <meta
+            name="viewport"
+            content="width=device-width, initial-scale=1.0, maximum-scale=1.0"
+        />
+        <title>MergeKeys — AmneziaWG Architect</title>
+        <meta
+            name="description"
+            content="Обновите обфускацию AWG-ключа или объедините несколько ключей Amnezia VPN в один."
+        />
+        <meta name="og:image" content="assets/og-mergekeys.png" />
+        <meta name="og:title" content="MergeKeys — AmneziaWG Architect" />
+        <meta
+            name="og:description"
+            content="Объединяй ключи Amnezia VPN, обновляй обфускацию — всё локально в браузере."
+        />
+        <link
+            rel="icon"
+            type="image/png"
+            href="assets/favicon-96x96.png"
+            sizes="96x96"
+        />
+        <link rel="icon" type="image/svg+xml" href="assets/favicon.svg" />
+        <link rel="shortcut icon" href="assets/favicon.ico" />
+        <link
+            rel="apple-touch-icon"
+            sizes="180x180"
+            href="assets/apple-touch-icon.png"
+        />
+        <meta name="apple-mobile-web-app-title" content="AWG-AiT" />
+        <link rel="manifest" href="assets/site.webmanifest" />
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link
+            href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@300;400;500;700&family=Unbounded:wght@300;500;700;900&family=Manrope:wght@300;400;500;600&display=swap"
+            rel="stylesheet"
+        />
+        <link rel="stylesheet" href="assets/main.css" />
+        <link rel="stylesheet" href="assets/style.css" />
+        <link rel="stylesheet" href="assets/mergekeys.style.css" />
+        <!-- Lucide Icons -->
+        <script src="https://unpkg.com/lucide@latest"></script>
+        <!-- pako (zlib для браузера) — нужен для vpnDecode/vpnEncode -->
+        <script src="https://cdn.jsdelivr.net/npm/pako@2.1.0/dist/pako.min.js"></script>
+    </head>
+    <body>
+        <div class="bg-fx">
+            <div class="noise"></div>
+            <div class="glow-1"></div>
+            <div class="glow-2"></div>
+            <div class="glow-3"></div>
+        </div>
+
+        <!-- Top Navigation -->
+        <nav class="top-nav fade-in">
+            <div class="nav-container">
+                <a href="index.html" class="nav-logo">
+                    <i data-lucide="cpu" class="icon-m"></i> AWG
+                    <span>ARCHITECT</span>
+                </a>
+                <div class="nav-links" id="navLinks">
+                    <a href="index.html" class="nav-link"
+                        ><i data-lucide="home" class="icon-s"></i> Генератор</a
+                    >
+                    <a href="mergekeys.html" class="nav-link"
+                        ><i data-lucide="combine" class="icon-s"></i>
+                        MergeKeys</a
+                    >
+                    <a href="about.html" class="nav-link"
+                        ><i data-lucide="info" class="icon-s"></i> О проекте</a
+                    >
+                    <a
+                        href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+                        target="_blank"
+                        class="nav-link nav-github"
+                        title="GitHub"
+                        ><i data-lucide="github" class="icon-s"></i
+                    ></a>
+                </div>
+                <button
+                    class="nav-mobile-btn"
+                    onclick="
+                        document
+                            .getElementById('navLinks')
+                            .classList.toggle('show')
+                    "
+                >
+                    <i data-lucide="menu"></i>
+                </button>
+            </div>
+        </nav>
+
+        <div class="mk-wrap fade-in">
+            <!-- Back link -->
+
+            <!-- Header -->
+            <div class="mk-header">
+                <div class="badge" style="margin-bottom: 14px">
+                    <i
+                        data-lucide="git-merge"
+                        style="width: 12px; height: 12px"
+                    ></i>
+                    MERGE KEYS
+                </div>
+                <h1>MERGE<span>KEYS</span></h1>
+                <p>Обновление обфускации и объединение ключей Amnezia VPN</p>
+            </div>
+
+            <!-- Pending cfg banner (from generator) -->
+            <div id="mkPendingBanner" class="mk-banner" style="display: none">
+                <div class="mk-banner-icon">
+                    <i
+                        data-lucide="check-circle-2"
+                        style="width: 18px; height: 18px"
+                    ></i>
+                </div>
+                <div class="mk-banner-text">
+                    <b>Конфиг из генератора загружен.</b>
+                    <span id="mkPendingText"></span>
+                    Вставьте ваш vpn://-ключ ниже и нажмите «Применить».
+                </div>
+            </div>
+
+            <!-- No pending cfg notice -->
+            <div id="mkNoCfgNotice" class="mk-notice" style="display: none">
+                <div class="mk-notice-icon">
+                    <i data-lucide="info" style="width: 18px; height: 18px"></i>
+                </div>
+                <div class="mk-notice-text">
+                    <b>Конфиг обфускации не передан.</b>
+                    Для обновления параметров Jc/Jmin/Jmax/I1–I5 вернитесь на
+                    <a href="index.html">главную страницу</a>, нажмите
+                    <b>«СГЕНЕРИРОВАТЬ»</b>, затем
+                    <b>«Открыть MergeKeys»</b>.<br />
+                    Вкладка <b>«Объединить ключи»</b> работает без генератора.
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="mk-tabs" style="align-self: center">
+                <button
+                    id="mkTab_update"
+                    class="mk-tab-btn active"
+                    onclick="mkSwitchTab('update')"
+                >
+                    <i
+                        data-lucide="sliders-horizontal"
+                        style="width: 14px; height: 14px"
+                    ></i>
+                    Обновить обфускацию
+                </button>
+                <button
+                    id="mkTab_merge"
+                    class="mk-tab-btn"
+                    onclick="mkSwitchTab('merge')"
+                >
+                    <i
+                        data-lucide="git-merge"
+                        style="width: 14px; height: 14px"
+                    ></i>
+                    Объединить ключи
+                </button>
+            </div>
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 PANE 1 — Update obfuscation
+            ═══════════════════════════════════════════════════════════ -->
+            <div id="mkPane_update" class="mk-pane visible">
+                <!-- How-it-works -->
+                <div class="mk-how" id="mkHowUpdate">
+                    <div
+                        class="mk-how-head"
+                        onclick="mkToggleHow('mkHowUpdate')"
+                    >
+                        <i
+                            data-lucide="help-circle"
+                            style="
+                                width: 14px;
+                                height: 14px;
+                                color: var(--amber2);
+                            "
+                        ></i>
+                        <span class="mk-how-title">Как это работает</span>
+                        <span class="mk-how-arrow">
+                            <i
+                                data-lucide="chevron-down"
+                                style="width: 14px; height: 14px"
+                            ></i>
+                        </span>
+                    </div>
+                    <div class="mk-how-body">
+                        <div class="mk-how-item">
+                            <div class="mk-how-num">1</div>
+                            <div>
+                                На главной странице нажмите
+                                <b>«СГЕНЕРИРОВАТЬ»</b>, затем
+                                <b>«Открыть MergeKeys»</b> — новые параметры
+                                обфускации будут переданы сюда автоматически.
+                            </div>
+                        </div>
+                        <div class="mk-how-item">
+                            <div class="mk-how-num">2</div>
+                            <div>
+                                Вставьте ваш существующий
+                                <b>vpn://-ключ</b> Amnezia (AWG или AWG + XRay и
+                                т.д.) в поле ниже.
+                            </div>
+                        </div>
+                        <div class="mk-how-item">
+                            <div class="mk-how-num">3</div>
+                            <div>
+                                Нажмите <b>«Применить обфускацию»</b>.
+                                Инструмент обновит только клиентские параметры:
+                                <b>Jc, Jmin, Jmax</b> и (при AWG 2.0)
+                                <b>I1–I5</b>. Серверные H1–H4, S1–S4 и ключи —
+                                не тронуты.
+                            </div>
+                        </div>
+                        <div class="mk-how-item">
+                            <div class="mk-how-num">4</div>
+                            <div>
+                                Скопируйте готовый ключ и импортируйте его в
+                                <b>Amnezia VPN</b>.
+                            </div>
+                        </div>
+                        <div
+                            class="mk-compat mk-compat-warn"
+                            style="margin-top: 4px"
+                        >
+                            <i
+                                data-lucide="shield-alert"
+                                style="
+                                    width: 15px;
+                                    height: 15px;
+                                    flex-shrink: 0;
+                                "
+                            ></i>
+                            <span
+                                ><b>Важно:</b> параметры H1–H4 и S1–S4 —
+                                серверные. Их изменение без пересинхронизации
+                                сервера разорвёт соединение. Этот инструмент их
+                                не меняет.</span
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Input card -->
+                <div class="mk-card">
+                    <div class="mk-card-head">
+                        <i
+                            data-lucide="key"
+                            style="
+                                width: 14px;
+                                height: 14px;
+                                color: var(--amber2);
+                            "
+                        ></i>
+                        <span class="mk-card-title">Ваш существующий ключ</span>
+                        <!-- AWG version compat info pills -->
+                        <div
+                            class="mk-info-row"
+                            id="mkUpdateCompatPills"
+                            style="margin: 0"
+                        >
+                            <!-- filled by JS -->
+                        </div>
+                    </div>
+                    <div class="mk-card-body">
+                        <div>
+                            <div class="mk-label">
+                                <i
+                                    data-lucide="clipboard"
+                                    style="width: 11px; height: 11px"
+                                ></i>
+                                Вставьте vpn://-ключ Amnezia
+                            </div>
+                            <textarea
+                                id="mkSingleInput"
+                                class="mk-ta"
+                                rows="4"
+                                placeholder="vpn://AAAGX..."
+                                oninput="mkClearSingleResult()"
+                            ></textarea>
+                        </div>
+
+                        <div class="mk-actions">
+                            <button
+                                class="mk-btn-primary"
+                                onclick="mergeApplyObf()"
+                            >
+                                <i
+                                    data-lucide="zap"
+                                    style="width: 14px; height: 14px"
+                                ></i>
+                                Применить обфускацию
+                            </button>
+                            <button
+                                class="mk-btn-sec"
+                                onclick="mkSingleDecodeOnly()"
+                            >
+                                <i
+                                    data-lucide="eye"
+                                    style="width: 13px; height: 13px"
+                                ></i>
+                                Просмотр JSON
+                            </button>
+                            <button
+                                class="mk-btn-ghost"
+                                onclick="mkSingleClear()"
+                            >
+                                <i
+                                    data-lucide="trash-2"
+                                    style="width: 13px; height: 13px"
+                                ></i>
+                                Очистить
+                            </button>
+                        </div>
+
+                        <!-- Result block -->
+                        <div id="mkSingleResultBlock" class="mk-result">
+                            <!-- Error -->
+                            <div id="mkSingleError" class="mk-err">
+                                <div class="mk-err-icon">
+                                    <i
+                                        data-lucide="x-circle"
+                                        style="width: 15px; height: 15px"
+                                    ></i>
+                                </div>
+                                <div
+                                    id="mkSingleErrorText"
+                                    class="mk-err-text"
+                                ></div>
+                            </div>
+
+                            <!-- OK -->
+                            <div id="mkSingleOk" class="mk-ok">
+                                <div class="mk-ok-pill">
+                                    <i
+                                        data-lucide="check-circle-2"
+                                        style="width: 14px; height: 14px"
+                                    ></i>
+                                    <span>Ключ обновлён успешно</span>
+                                    <span
+                                        id="mkSingleSummary"
+                                        class="mk-summary"
+                                        style="
+                                            margin-left: auto;
+                                            text-align: right;
+                                        "
+                                    ></span>
+                                </div>
+
+                                <div>
+                                    <div class="mk-label">
+                                        <i
+                                            data-lucide="key"
+                                            style="width: 11px; height: 11px"
+                                        ></i>
+                                        Готовый ключ
+                                    </div>
+                                    <div class="mk-out-row">
+                                        <textarea
+                                            id="mkSingleOutput"
+                                            class="mk-ta"
+                                            rows="3"
+                                            readonly
+                                        ></textarea>
+                                        <div class="mk-out-actions">
+                                            <button
+                                                id="mkSingleCopyBtn"
+                                                class="mk-btn-sec"
+                                                title="Копировать"
+                                                onclick="
+                                                    mkCopyResult(
+                                                        'mkSingleCopyBtn',
+                                                        'mkSingleOutput',
+                                                    )
+                                                "
+                                            >
+                                                <i
+                                                    data-lucide="copy"
+                                                    style="
+                                                        width: 13px;
+                                                        height: 13px;
+                                                    "
+                                                ></i>
+                                                Копировать
+                                            </button>
+                                            <button
+                                                class="mk-btn-ghost"
+                                                title="Скачать JSON"
+                                                onclick="
+                                                    mkDownloadResult(
+                                                        'mkSingleOutput',
+                                                    )
+                                                "
+                                            >
+                                                <i
+                                                    data-lucide="download"
+                                                    style="
+                                                        width: 13px;
+                                                        height: 13px;
+                                                    "
+                                                ></i>
+                                                JSON
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Preview (decode only) -->
+                            <div id="mkSinglePreview" class="mk-preview">
+                                <div class="mk-preview-label">
+                                    <i
+                                        data-lucide="file-json"
+                                        style="
+                                            width: 11px;
+                                            height: 11px;
+                                            vertical-align: middle;
+                                        "
+                                    ></i>
+                                    Содержимое ключа (только просмотр)
+                                </div>
+                                <pre
+                                    id="mkSinglePreviewCode"
+                                    class="mk-preview-code"
+                                ></pre>
+                            </div>
+                        </div>
+                        <!-- /mkSingleResultBlock -->
+                    </div>
+                </div>
+            </div>
+            <!-- /mkPane_update -->
+
+            <!-- ═══════════════════════════════════════════════════════════
+                 PANE 2 — Merge containers
+            ═══════════════════════════════════════════════════════════ -->
+            <div id="mkPane_merge" class="mk-pane">
+                <!-- How-it-works -->
+                <div class="mk-how" id="mkHowMerge">
+                    <div
+                        class="mk-how-head"
+                        onclick="mkToggleHow('mkHowMerge')"
+                    >
+                        <i
+                            data-lucide="help-circle"
+                            style="
+                                width: 14px;
+                                height: 14px;
+                                color: var(--amber2);
+                            "
+                        ></i>
+                        <span class="mk-how-title"
+                            >Зачем объединять ключи?</span
+                        >
+                        <span class="mk-how-arrow">
+                            <i
+                                data-lucide="chevron-down"
+                                style="width: 14px; height: 14px"
+                            ></i>
+                        </span>
+                    </div>
+                    <div class="mk-how-body">
+                        <div class="mk-how-item">
+                            <div class="mk-how-num">?</div>
+                            <div>
+                                Amnezia VPN поддерживает несколько контейнеров
+                                (протоколов) в одном ключе:
+                                <b>AWG + XRay, AWG + OpenVPN</b> и т.д. Это
+                                позволяет переключаться между протоколами без
+                                смены ключа.
+                            </div>
+                        </div>
+                        <div class="mk-how-item">
+                            <div class="mk-how-num">1</div>
+                            <div>
+                                Вставьте два или более vpn://-ключа в слоты
+                                ниже. Например, первый — ключ AWG, второй — ключ
+                                XRay от того же сервера.
+                            </div>
+                        </div>
+                        <div class="mk-how-item">
+                            <div class="mk-how-num">2</div>
+                            <div>
+                                Нажмите <b>«Объединить»</b>. Контейнеры из всех
+                                ключей будут собраны в один мастер-ключ.
+                                Дубликаты (одинаковое имя контейнера)
+                                пропускаются с предупреждением.
+                            </div>
+                        </div>
+                        <div class="mk-how-item">
+                            <div class="mk-how-num">3</div>
+                            <div>
+                                Если открыт из генератора — новые параметры
+                                обфускации AWG будут применены автоматически к
+                                AWG-контейнерам в итоговом ключе.
+                            </div>
+                        </div>
+                        <div
+                            class="mk-compat mk-compat-info"
+                            style="margin-top: 4px"
+                        >
+                            <i
+                                data-lucide="info"
+                                style="
+                                    width: 15px;
+                                    height: 15px;
+                                    flex-shrink: 0;
+                                "
+                            ></i>
+                            <span
+                                >Метаданные (dns1, dns2, hostName,
+                                defaultContainer) берутся из
+                                <b>первого ключа</b>. Описание объединяется
+                                через « + ».</span
+                            >
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Slots card -->
+                <div class="mk-card">
+                    <div class="mk-card-head">
+                        <i
+                            data-lucide="layers"
+                            style="
+                                width: 14px;
+                                height: 14px;
+                                color: var(--amber2);
+                            "
+                        ></i>
+                        <span class="mk-card-title">Ключи для объединения</span>
+                        <span class="mk-summary" style="color: var(--text3)">
+                            минимум 2, максимум 4
+                        </span>
+                    </div>
+                    <div class="mk-card-body">
+                        <!-- Dynamic slots rendered here -->
+                        <div
+                            id="mkMergeSlots"
+                            style="
+                                display: flex;
+                                flex-direction: column;
+                                gap: 10px;
+                            "
+                        ></div>
+
+                        <!-- Add slot button -->
+                        <button
+                            id="mkAddSlotBtn"
+                            class="mk-add-slot"
+                            onclick="mkAddSlot()"
+                        >
+                            <i
+                                data-lucide="plus-circle"
+                                style="width: 13px; height: 13px"
+                            ></i>
+                            Добавить ещё один ключ
+                        </button>
+
+                        <div class="mk-divider"></div>
+
+                        <div class="mk-actions">
+                            <button
+                                class="mk-btn-primary"
+                                onclick="mergeContainers()"
+                            >
+                                <i
+                                    data-lucide="git-merge"
+                                    style="width: 14px; height: 14px"
+                                ></i>
+                                Объединить
+                            </button>
+                            <button
+                                class="mk-btn-ghost"
+                                onclick="mkClearAllSlots()"
+                            >
+                                <i
+                                    data-lucide="trash-2"
+                                    style="width: 13px; height: 13px"
+                                ></i>
+                                Очистить всё
+                            </button>
+                        </div>
+
+                        <!-- Result block -->
+                        <div id="mkMergeResultBlock" class="mk-result">
+                            <!-- Error -->
+                            <div id="mkMergeError" class="mk-err">
+                                <div class="mk-err-icon">
+                                    <i
+                                        data-lucide="x-circle"
+                                        style="width: 15px; height: 15px"
+                                    ></i>
+                                </div>
+                                <div
+                                    id="mkMergeErrorText"
+                                    class="mk-err-text"
+                                ></div>
+                            </div>
+
+                            <!-- Warnings -->
+                            <div id="mkMergeWarnings" class="mk-warnings"></div>
+
+                            <!-- OK -->
+                            <div id="mkMergeOk" class="mk-ok">
+                                <div class="mk-ok-pill">
+                                    <i
+                                        data-lucide="check-circle-2"
+                                        style="width: 14px; height: 14px"
+                                    ></i>
+                                    <span>Ключи объединены</span>
+                                    <span
+                                        id="mkMergeSummary"
+                                        class="mk-summary"
+                                        style="
+                                            margin-left: auto;
+                                            text-align: right;
+                                        "
+                                    ></span>
+                                </div>
+
+                                <div>
+                                    <div class="mk-label">
+                                        <i
+                                            data-lucide="key"
+                                            style="width: 11px; height: 11px"
+                                        ></i>
+                                        Объединённый ключ
+                                    </div>
+                                    <div class="mk-out-row">
+                                        <textarea
+                                            id="mkMergeOutput"
+                                            class="mk-ta"
+                                            rows="3"
+                                            readonly
+                                        ></textarea>
+                                        <div class="mk-out-actions">
+                                            <button
+                                                id="mkMergeCopyBtn"
+                                                class="mk-btn-sec"
+                                                title="Копировать"
+                                                onclick="
+                                                    mkCopyResult(
+                                                        'mkMergeCopyBtn',
+                                                        'mkMergeOutput',
+                                                    )
+                                                "
+                                            >
+                                                <i
+                                                    data-lucide="copy"
+                                                    style="
+                                                        width: 13px;
+                                                        height: 13px;
+                                                    "
+                                                ></i>
+                                                Копировать
+                                            </button>
+                                            <button
+                                                class="mk-btn-ghost"
+                                                title="Скачать JSON"
+                                                onclick="
+                                                    mkDownloadResult(
+                                                        'mkMergeOutput',
+                                                    )
+                                                "
+                                            >
+                                                <i
+                                                    data-lucide="download"
+                                                    style="
+                                                        width: 13px;
+                                                        height: 13px;
+                                                    "
+                                                ></i>
+                                                JSON
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Preview -->
+                            <div id="mkMergePreviewBlock" class="mk-preview">
+                                <div
+                                    class="mk-preview-label"
+                                    id="mkMergePreviewLabel"
+                                >
+                                    <i
+                                        data-lucide="file-json"
+                                        style="
+                                            width: 11px;
+                                            height: 11px;
+                                            vertical-align: middle;
+                                        "
+                                    ></i>
+                                    Содержимое ключа
+                                </div>
+                                <pre
+                                    id="mkMergePreviewCode"
+                                    class="mk-preview-code"
+                                ></pre>
+                            </div>
+                        </div>
+                        <!-- /mkMergeResultBlock -->
+                    </div>
+                </div>
+            </div>
+            <!-- /mkPane_merge -->
+        </div>
+        <!-- /mk-wrap -->
+
+        <!-- Footer -->
+        <footer class="main-footer">
+            <div class="main-footer-inner">
+                <!-- Slogan -->
+                <div class="footer-slogan">
+                    Шифруем реальность.
+                    <span class="slogan-accent slogan-glow"
+                        >Архитектура свободы</span
+                    >
+                    — в каждом пакете.
+                </div>
+
+                <!-- Links Grid -->
+                <div class="footer-grid">
+                    <a
+                        href="https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="footer-grid-link"
+                    >
+                        <i data-lucide="github" class="icon-m"></i>
+                        <div class="fgl-content">
+                            <span class="fgl-title">Исходный код</span>
+                            <span class="fgl-desc"
+                                >AmneziaWG-Architect на GitHub</span
+                            >
+                        </div>
+                    </a>
+                    <a
+                        href="https://github.com/Vadim-Khristenko/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="footer-grid-link"
+                    >
+                        <i data-lucide="user" class="icon-m"></i>
+                        <div class="fgl-content">
+                            <span class="fgl-title">Автор проекта</span>
+                            <span class="fgl-desc">Vadim-Khristenko</span>
+                        </div>
+                    </a>
+                    <a
+                        href="https://t.me/amnezia_vpn"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="footer-grid-link"
+                    >
+                        <i data-lucide="send" class="icon-m"></i>
+                        <div class="fgl-content">
+                            <span class="fgl-title">Amnezia VPN Чат</span>
+                            <span class="fgl-desc">Сообщество в Telegram</span>
+                        </div>
+                    </a>
+                    <a
+                        href="https://github.com/amnezia-vpn/"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        class="footer-grid-link"
+                    >
+                        <i data-lucide="shield" class="icon-m"></i>
+                        <div class="fgl-content">
+                            <span class="fgl-title">Amnezia VPN</span>
+                            <span class="fgl-desc">Официальный GitHub</span>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="footer-divider"></div>
+
+                <!-- Credits — VoidWaifu -->
+                <div class="footer-credits">
+                    <div class="footer-credits-label">
+                        Вдохновение и исследования
+                    </div>
+                    <div class="footer-credits-text">
+                        Основано на идеях и исследованиях из
+                        <a
+                            href="https://voidwaifu.github.io/Special-Junk-Packet-List/"
+                            target="_blank"
+                            >Special Junk Packet List</a
+                        >
+                        и вдохновлено работой
+                        <a href="https://github.com/VoidWaifu" target="_blank"
+                            >@VoidWaifu</a
+                        >
+                    </div>
+                </div>
+
+                <div class="footer-divider"></div>
+
+                <!-- Copyright -->
+                <div class="footer-copy">
+                    <span class="copy-brand">AmneziaWG Architect</span>
+                    &copy; 2026 — Инструмент для свободного интернета<br />
+                    Разработано с <span class="copy-heart">❤️</span> для
+                    сообщества AmneziaVPN
+                </div>
+
+                <div
+                    style="
+                        text-align: center;
+                        font-family: var(--fm);
+                        font-size: 0.65rem;
+                        color: var(--text3);
+                        opacity: 0.7;
+                        margin-top: -8px;
+                    "
+                >
+                    Все операции выполняются локально в браузере. Ключи никуда
+                    не отправляются.
+                </div>
+            </div>
+        </footer>
+
+        <!-- Scripts -->
+        <script src="mergekeys.js"></script>
+        <script>
+            /* ── Page-level helpers not in mergekeys.js ───────────────────── */
+
+            /**
+             * mkToggleHow(id) — раскрыть/закрыть how-it-works блок.
+             */
+            function mkToggleHow(id) {
+                var el = document.getElementById(id);
+                if (!el) return;
+                var body = el.querySelector(".mk-how-body");
+                if (!body) return;
+                var isOpen = el.classList.contains("open");
+
+                if (isOpen) {
+                    // Закрываем: фиксируем текущую высоту, убираем класс open
+                    // (CSS переключит padding), форс-рефлоу, затем анимируем до 0
+                    body.style.maxHeight = body.scrollHeight + "px";
+                    body.offsetHeight; // force reflow
+                    el.classList.remove("open");
+                    body.offsetHeight; // force reflow
+                    body.style.maxHeight = "0";
+                    // После окончания анимации сбрасываем инлайн-стиль
+                    body.addEventListener("transitionend", function onClose(e) {
+                        if (e.propertyName === "max-height") {
+                            body.style.maxHeight = "";
+                            body.removeEventListener("transitionend", onClose);
+                        }
+                    });
+                } else {
+                    // Открываем: добавляем open (CSS применит padding-bottom),
+                    // затем задаём max-height по реальной высоте контента
+                    el.classList.add("open");
+                    body.style.maxHeight = body.scrollHeight + "px";
+                    // После окончания анимации снимаем жёсткий лимит высоты
+                    body.addEventListener("transitionend", function onOpen(e) {
+                        if (e.propertyName === "max-height") {
+                            body.style.maxHeight = "9999px";
+                            body.removeEventListener("transitionend", onOpen);
+                        }
+                    });
+                }
+                if (typeof lucide !== "undefined")
+                    setTimeout(lucide.createIcons, 50);
+            }
+
+            /**
+             * mkClearAllSlots() — очищает все textarea слотов и результат.
+             */
+            function mkClearAllSlots() {
+                for (var i = 0; i < mkMergeSlots.length; i++) {
+                    var ta = document.getElementById("mkMergeInput_" + i);
+                    if (ta) ta.value = "";
+                }
+                mkClearMergeResult();
+            }
+
+            /**
+             * mkUpdateCompatPills() — обновляет информационные pills
+             * в заголовке блока обновления обфускации на основе mkPendingVer.
+             */
+            function mkUpdateCompatPills() {
+                var container = document.getElementById("mkUpdateCompatPills");
+                if (!container) return;
+                if (!mkPendingCfg) {
+                    container.innerHTML =
+                        '<span class="mk-info-pill mk-pill-red">' +
+                        '<i data-lucide="x" style="width:9px;height:9px"></i>Нет конфига</span>';
+                } else if (mkPendingVer === "1.0") {
+                    container.innerHTML =
+                        '<span class="mk-info-pill mk-pill-amber">' +
+                        '<i data-lucide="layers" style="width:9px;height:9px"></i>AWG 1.0</span>' +
+                        '<span class="mk-info-pill mk-pill-amber">' +
+                        '<i data-lucide="check" style="width:9px;height:9px"></i>Jc/Jmin/Jmax</span>' +
+                        '<span class="mk-info-pill mk-pill-red">' +
+                        '<i data-lucide="x" style="width:9px;height:9px"></i>I1–I5 не поддерж.</span>';
+                } else {
+                    container.innerHTML =
+                        '<span class="mk-info-pill mk-pill-green">' +
+                        '<i data-lucide="layers" style="width:9px;height:9px"></i>AWG ' +
+                        mkPendingVer +
+                        "</span>" +
+                        '<span class="mk-info-pill mk-pill-green">' +
+                        '<i data-lucide="check" style="width:9px;height:9px"></i>Jc/Jmin/Jmax</span>' +
+                        '<span class="mk-info-pill mk-pill-green">' +
+                        '<i data-lucide="check" style="width:9px;height:9px"></i>I1–I5 (CPS)</span>';
+                }
+                if (typeof lucide !== "undefined")
+                    setTimeout(lucide.createIcons, 30);
+            }
+
+            /* ── Boot ────────────────────────────────────────────────────── */
+            document.addEventListener("DOMContentLoaded", function () {
+                mkInit();
+                mkUpdateCompatPills();
+                if (typeof lucide !== "undefined") lucide.createIcons();
+            });
+        </script>
+    </body>
+</html>
