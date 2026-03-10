@@ -55,6 +55,8 @@ import {
 
 const activeTimeline = ref<number | null>(null);
 const avatarFailed = ref(false);
+// Use Vite-friendly asset URL so Rollup/Vite resolves the avatar correctly
+const avatarUrl = new URL("/assets/avatar.jpg", import.meta.url).href;
 
 function toggleTimeline(idx: number) {
     activeTimeline.value = activeTimeline.value === idx ? null : idx;
@@ -404,7 +406,7 @@ const statCards = [
                 <div class="dev-avatar">
                     <img
                         v-if="!avatarFailed"
-                        src="/assets/avatar.jpg"
+                        :src="avatarUrl"
                         alt="Developer Avatar"
                         class="dev-avatar-image"
                         @error="avatarFailed = true"
