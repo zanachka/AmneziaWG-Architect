@@ -1,0 +1,21 @@
+{
+  "error": "IN_DEVELOPMENT",
+  "status": 503,
+  "msg": "API находится в разработке. Проект является некоммерческим инструментом с открытым исходным кодом для исследования сетевых протоколов и обеспечения цифровой безопасности. Если вы хотите поддержать развитие проекта — вы можете сделать добровольное пожертвование через методы, доступные на сайте-портфолио автора.",
+  "versions": {
+    "v1": {
+      "url": "/api/v1/",
+      "stable": false,
+      "status": "IN_DEVELOPMENT"
+    }
+  },
+  "links": {
+    "portfolio": "https://vadim-khristenko.github.io",
+    "source": "https://github.com/Vadim-Khristenko/AmneziaWG-Architect"
+  },
+  "meta": {
+    "project": "AmneziaWG Architect",
+    "description": "Open-source configuration generator for AmneziaWG — a WireGuard fork with traffic obfuscation support, intended for privacy research and network security education.",
+    "license": "MIT"
+  }
+}

@@ -84,11 +84,6 @@ jobs:
           bun run build
           echo "::endgroup::"
 
-      - name: 📄 Create SPA fallback (404.html)
-        run: |
-          cp dist/index.html dist/404.html
-          echo "✅ 404.html created"
-
       - name: 📊 Collect build metadata
         id: meta
         run: |

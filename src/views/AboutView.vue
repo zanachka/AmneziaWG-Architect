@@ -1,19 +1,4 @@
 <script setup lang="ts">
-/**
- * AboutView.vue — Redesigned interactive about page.
- *
- * Sections:
- *   1. Hero
- *   2. What is this project?
- *   3. Evolution timeline
- *   4. For beginners & advanced
- *   5. MergeKeys module
- *   6. Privacy & security
- *   7. Open source
- *   8. Developer & contact
- *   9. Support / donation
- */
-
 import { ref } from "vue";
 import {
     Info,
@@ -55,8 +40,7 @@ import {
 
 const activeTimeline = ref<number | null>(null);
 const avatarFailed = ref(false);
-// Use Vite-friendly asset URL so Rollup/Vite resolves the avatar correctly
-const avatarUrl = new URL("/assets/avatar.jpg", import.meta.url).href;
+const avatarUrl = `${import.meta.env.BASE_URL}assets/avatar.jpg`;
 
 function toggleTimeline(idx: number) {
     activeTimeline.value = activeTimeline.value === idx ? null : idx;

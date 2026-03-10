@@ -22,8 +22,7 @@ const route = useRoute();
 const isMenuOpen = ref(false);
 const isScrolled = ref(false);
 
-// Use Vite-friendly asset URL so Rollup/Vite resolves the favicon correctly
-const faviconUrl = new URL("/assets/favicon.svg", import.meta.url).href;
+const faviconUrl = `${import.meta.env.BASE_URL}assets/favicon.svg`;
 
 const navLinks: NavLink[] = [
     { name: "Генератор", to: "/", icon: Layers },

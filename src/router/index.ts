@@ -48,7 +48,7 @@ const routes: RouteRecordRaw[] = [
       ogTitle: "AmneziaWG Architect — Генератор конфигураций",
       ogDescription:
         "Тонкая настройка параметров AmneziaWG: Jc, Jmin, Jmax, S1–S4, H1–H4, CPS I1–I5. Профили мимикрии QUIC/TLS/DTLS/SIP. Защита от блокировок.",
-      ogImage: "/assets/og-image.png",
+      ogImage: `${import.meta.env.BASE_URL}assets/og-image.png`,
     },
   },
   {
@@ -62,7 +62,7 @@ const routes: RouteRecordRaw[] = [
       ogTitle: "MergeKeys — AmneziaWG Architect",
       ogDescription:
         "Объединяй ключи Amnezia VPN, обновляй обфускацию — всё локально в браузере.",
-      ogImage: "/assets/og-mergekeys.png",
+      ogImage: `${import.meta.env.BASE_URL}assets/og-mergekeys.png`,
     },
   },
   {
@@ -76,7 +76,7 @@ const routes: RouteRecordRaw[] = [
       ogTitle: "О проекте — AmneziaWG Architect",
       ogDescription:
         "Твой протокол — твои правила. Разбор архитектуры, безопасности и принципов работы генератора.",
-      ogImage: "/assets/og-about.png",
+      ogImage: `${import.meta.env.BASE_URL}assets/og-about.png`,
     },
   },
   {
@@ -90,7 +90,7 @@ const routes: RouteRecordRaw[] = [
       ogTitle: "IAA — AmneziaWG Architect",
       ogDescription:
         "Генератор команд для установки AmneziaWG на Windows, Linux, macOS.",
-      ogImage: "/assets/og-iaa.png",
+      ogImage: `${import.meta.env.BASE_URL}assets/og-iaa.png`,
     },
   },
   {

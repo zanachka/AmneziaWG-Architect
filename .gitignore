@@ -46,7 +46,6 @@ venv/
 dist/
 build/
 out/
-public/
 site/
 coverage/
 *.tgz
