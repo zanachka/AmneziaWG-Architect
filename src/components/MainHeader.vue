@@ -22,6 +22,9 @@ const route = useRoute();
 const isMenuOpen = ref(false);
 const isScrolled = ref(false);
 
+// Use Vite-friendly asset URL so Rollup/Vite resolves the favicon correctly
+const faviconUrl = new URL("/assets/favicon.svg", import.meta.url).href;
+
 const navLinks: NavLink[] = [
     { name: "Генератор", to: "/", icon: Layers },
     { name: "MergeKeys", to: "/mergekeys", icon: Download },
@@ -62,7 +65,7 @@ onUnmounted(() => {
             <!-- Brand Logo -->
             <router-link to="/" class="brand" @click="isMenuOpen = false">
                 <div class="brand-logo">
-                    <img src="/assets/favicon.svg" alt="AWG Logo" />
+                    <img :src="faviconUrl" alt="AWG Logo" />
                 </div>
                 <div class="brand-info">
                     <span class="brand-title">AmneziaWG</span>
