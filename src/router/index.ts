@@ -1,0 +1,159 @@
+/**
+ * Vue Router — SPA navigation for AmneziaWG Architect.
+ *
+ * Routes:
+ *   /           → HomeView      (Generator)
+ *   /mergekeys  → MergeKeysView (MergeKeys tool)
+ *   /about      → AboutView     (About page)
+ *   /iaa        → IaaView       (Install AmneziaWG Anywhere)
+ *
+ * Uses HTML5 history mode (createWebHistory) for clean URLs (no /#/ prefix).
+ * For GitHub Pages compatibility, index.html is copied to 404.html at build
+ * time so that direct navigation to sub-routes works correctly.
+ *
+ * Each route carries SEO meta (title, description, og:*) sourced from
+ * the legacy static HTML pages. An afterEach hook syncs them to <head>.
+ */
+
+import {
+  createRouter,
+  createWebHistory,
+  type RouteRecordRaw,
+  type RouteMeta,
+} from "vue-router";
+
+/* ── Extended route meta typing ──────────────────────────────── */
+
+declare module "vue-router" {
+  interface RouteMeta {
+    title?: string;
+    description?: string;
+    ogTitle?: string;
+    ogDescription?: string;
+    ogImage?: string;
+  }
+}
+
+/* ── Route definitions ───────────────────────────────────────── */
+
+const routes: RouteRecordRaw[] = [
+  {
+    path: "/",
+    name: "home",
+    component: () => import("@/views/HomeView.vue"),
+    meta: {
+      title: "AmneziaWG Architect — Генератор конфигураций",
+      description:
+        "Профессиональный инструмент для тонкой настройки и генерации конфигураций AmneziaWG. Защита от DPI, управление мусорными пакетами и оптимизация протокола.",
+      ogTitle: "AmneziaWG Architect — Генератор конфигураций",
+      ogDescription:
+        "Тонкая настройка параметров AmneziaWG: Jc, Jmin, Jmax, S1–S4, H1–H4, CPS I1–I5. Профили мимикрии QUIC/TLS/DTLS/SIP. Защита от блокировок.",
+      ogImage: "/assets/og-image.png",
+    },
+  },
+  {
+    path: "/mergekeys",
+    name: "mergekeys",
+    component: () => import("@/views/MergeKeysView.vue"),
+    meta: {
+      title: "MergeKeys — AmneziaWG Architect",
+      description:
+        "Обновите обфускацию AWG-ключа или объедините несколько ключей Amnezia VPN в один.",
+      ogTitle: "MergeKeys — AmneziaWG Architect",
+      ogDescription:
+        "Объединяй ключи Amnezia VPN, обновляй обфускацию — всё локально в браузере.",
+      ogImage: "/assets/og-mergekeys.png",
+    },
+  },
+  {
+    path: "/about",
+    name: "about",
+    component: () => import("@/views/AboutView.vue"),
+    meta: {
+      title: "О проекте — AmneziaWG Architect",
+      description:
+        "Что такое AmneziaWG Architect? Это интерактивный инструмент для генерации сложных конфигураций обфускации трафика AmneziaWG. Создан для тех, кто хочет вернуть себе свободный интернет.",
+      ogTitle: "О проекте — AmneziaWG Architect",
+      ogDescription:
+        "Твой протокол — твои правила. Разбор архитектуры, безопасности и принципов работы генератора.",
+      ogImage: "/assets/og-about.png",
+    },
+  },
+  {
+    path: "/iaa",
+    name: "iaa",
+    component: () => import("@/views/IaaView.vue"),
+    meta: {
+      title: "IAA — AmneziaWG Architect",
+      description:
+        "Install AmneziaWG Anywhere — генератор команд для установки и управления AmneziaWG на любой платформе.",
+      ogTitle: "IAA — AmneziaWG Architect",
+      ogDescription:
+        "Генератор команд для установки AmneziaWG на Windows, Linux, macOS.",
+      ogImage: "/assets/og-iaa.png",
+    },
+  },
+  {
+    // Catch-all redirect to home
+    path: "/:pathMatch(.*)*",
+    redirect: "/",
+  },
+];
+
+/* ── Router instance ─────────────────────────────────────────── */
+
+const router = createRouter({
+  history: createWebHistory(import.meta.env.BASE_URL),
+  routes,
+  scrollBehavior(_to, _from, savedPosition) {
+    if (savedPosition) return savedPosition;
+    return { top: 0 };
+  },
+});
+
+/* ── Sync <head> meta tags on every navigation ───────────────── */
+
+function setMeta(
+  name: string,
+  content: string,
+  attr: "name" | "property" = "name",
+) {
+  let el = document.querySelector(
+    `meta[${attr}="${name}"]`,
+  ) as HTMLMetaElement | null;
+  if (el) {
+    el.setAttribute("content", content);
+  } else {
+    el = document.createElement("meta");
+    el.setAttribute(attr, name);
+    el.setAttribute("content", content);
+    document.head.appendChild(el);
+  }
+}
+
+router.afterEach((to) => {
+  const m = to.meta;
+
+  // Title
+  if (m.title) {
+    document.title = m.title;
+  }
+
+  // Description
+  if (m.description) {
+    setMeta("description", m.description);
+  }
+
+  // Open Graph
+  if (m.ogTitle) {
+    setMeta("og:title", m.ogTitle, "property");
+  }
+  if (m.ogDescription) {
+    setMeta("og:description", m.ogDescription, "property");
+  }
+  if (m.ogImage) {
+    setMeta("og:image", m.ogImage, "property");
+  }
+});
+
+export default router;
