@@ -3,15 +3,63 @@ import vue from "@vitejs/plugin-vue";
 import path from "path";
 import fs from "fs";
 
+// ── Route definitions for pre-render stubs ──────────────────────────────────
+// Each entry produces dist/{slug}/index.html with correct og:meta so that
+// crawlers/bots get real metadata without executing JavaScript.
+interface RouteStub {
+  slug: string; // e.g. "about"  → dist/about/index.html
+  title: string;
+  description: string;
+  ogTitle: string;
+  ogDescription: string;
+  ogImage: string; // relative to site root assets dir, e.g. "og-about.png"
+}
+
+const ROUTE_STUBS: RouteStub[] = [
+  {
+    slug: "mergekeys",
+    title: "MergeKeys — AmneziaWG Architect",
+    description:
+      "Обновите обфускацию AWG-ключа или объедините несколько ключей Amnezia VPN в один.",
+    ogTitle: "MergeKeys — AmneziaWG Architect",
+    ogDescription:
+      "Объединяй ключи Amnezia VPN, обновляй обфускацию — всё локально в браузере.",
+    ogImage: "og-mergekeys.png",
+  },
+  {
+    slug: "about",
+    title: "О проекте — AmneziaWG Architect",
+    description:
+      "Что такое AmneziaWG Architect? Это интерактивный инструмент для генерации сложных конфигураций обфускации трафика AmneziaWG. Создан для тех, кто хочет вернуть себе свободный интернет.",
+    ogTitle: "О проекте — AmneziaWG Architect",
+    ogDescription:
+      "Твой протокол — твои правила. Разбор архитектуры, безопасности и принципов работы генератора.",
+    ogImage: "og-about.png",
+  },
+  {
+    slug: "iaa",
+    title: "IAA — AmneziaWG Architect",
+    description:
+      "Install AmneziaWG Anywhere — генератор команд для установки и управления AmneziaWG на любой платформе.",
+    ogTitle: "IAA — AmneziaWG Architect",
+    ogDescription:
+      "Генератор команд для установки AmneziaWG на Windows, Linux, macOS.",
+    ogImage: "og-iaa.png",
+  },
+];
+
 /**
  * Vite plugin that handles GitHub Pages SPA routing:
  *
  * 1. Generates dist/404.html with a redirect script that preserves the URL
- *    and bounces the user back to index.html (GitHub Pages serves 404.html
- *    for any path it doesn't recognise).
+ *    and bounces the user back to the app root (index.html).
  *
- * 2. Injects a tiny restore script into dist/index.html so the Vue router
- *    sees the original path (e.g. /mergekeys) instead of /?p=mergekeys.
+ * 2. Injects a tiny restore script into dist/index.html so Vue Router
+ *    sees the original path (e.g. /mergekeys) instead of the root.
+ *
+ * 3. Pre-renders stub HTML files for every route (dist/{slug}/index.html)
+ *    so that crawlers/bots receive correct og:meta tags without JS execution,
+ *    AND so that GitHub Pages never triggers 404.html for known routes.
  */
 function spaFallback(): Plugin {
   return {
@@ -27,10 +75,28 @@ function spaFallback(): Plugin {
       // base = "/"           → 1  (root domain:   username.github.io)
       // base = "/repo-name/" → 2  (project page:  username.github.io/repo)
       const repoName = process.env.GITHUB_REPOSITORY?.split("/")[1];
+      const owner = process.env.GITHUB_REPOSITORY?.split("/")[0];
       const isGhActions = Boolean(process.env.GITHUB_ACTIONS);
       const segmentCount = isGhActions && repoName ? 2 : 1;
 
+      // Canonical site origin used for absolute og:image URLs (required by bots)
+      const siteBase =
+        isGhActions && repoName && owner
+          ? `https://${owner.toLowerCase()}.github.io/${repoName}`
+          : "";
+
       // ── 1. Write dist/404.html with a redirect script ───────────────────
+      //
+      // IMPORTANT: base is computed as slice(0, segmentCount) — NOT +1.
+      //
+      // Example on a project page (segmentCount = 2):
+      //   pathname = "/AmneziaWG-Architect/iaa/"
+      //   split    = ["", "AmneziaWG-Architect", "iaa", ""]
+      //   slice(0,2) = ["", "AmneziaWG-Architect"]  →  "/AmneziaWG-Architect"
+      //   replace  → origin + "/AmneziaWG-Architect/"   ✓ (app root)
+      //
+      // Using slice(0, segmentCount + 1) would give "/AmneziaWG-Architect/iaa"
+      // and redirect back to the same 404 page → infinite loop.
       const redirect404 = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -157,7 +223,7 @@ function spaFallback(): Plugin {
     // so Vue Router sees the original path.
     (function () {
       var l = window.location;
-      var base = l.pathname.split('/').slice(0, ${segmentCount} + 1).join('/');
+      var base = l.pathname.split('/').slice(0, ${segmentCount}).join('/');
       sessionStorage.redirect = l.pathname + l.search + l.hash;
       l.replace(l.origin + base + '/');
     })();
@@ -169,7 +235,69 @@ function spaFallback(): Plugin {
       fs.writeFileSync(dest404, redirect404, "utf-8");
       console.log("  ✓ SPA fallback: generated 404.html with redirect script");
 
-      // ── 2. Inject restore script into dist/index.html ───────────────────
+      // ── 2. Pre-render stubs for every named route ────────────────────────
+      // Creates dist/{slug}/index.html with correct <title>, <meta name="description">
+      // and og:meta tags hard-coded in HTML so that:
+      //   a) Crawlers / OG bots get real metadata without running JS.
+      //   b) GitHub Pages finds a real file → 404.html is never triggered
+      //      for known routes → no redirect loop for direct navigation.
+      //
+      // The stub contains the same JS bundle as index.html so regular users
+      // still get the full Vue SPA experience after hydration.
+
+      const indexHtml = fs.readFileSync(indexSrc, "utf-8");
+      const basePath = isGhActions && repoName ? `/${repoName}` : "";
+
+      for (const route of ROUTE_STUBS) {
+        const absImage = siteBase
+          ? `${siteBase}/assets/${route.ogImage}`
+          : `${basePath}/assets/${route.ogImage}`;
+
+        // Replace <title>
+        let stub = indexHtml.replace(
+          /<title>[^<]*<\/title>/,
+          `<title>${route.title}</title>`,
+        );
+
+        // Replace <meta name="description">
+        stub = stub.replace(
+          /(<meta\s+name="description"\s+content=")[^"]*(")/,
+          `$1${route.description}$2`,
+        );
+
+        // Replace / inject og:title
+        if (stub.includes("og:title")) {
+          stub = stub.replace(
+            /(<meta\s+property="og:title"\s+content=")[^"]*(")/,
+            `$1${route.ogTitle}$2`,
+          );
+        }
+
+        // Replace / inject og:description
+        if (stub.includes("og:description")) {
+          stub = stub.replace(
+            /(<meta\s+property="og:description"\s+content=")[^"]*(")/,
+            `$1${route.ogDescription}$2`,
+          );
+        }
+
+        // Replace / inject og:image (must be absolute URL for bots)
+        if (stub.includes("og:image")) {
+          stub = stub.replace(
+            /(<meta\s+property="og:image"\s+content=")[^"]*(")/,
+            `$1${absImage}$2`,
+          );
+        }
+
+        // Write dist/{slug}/index.html
+        const stubDir = path.join(outDir, route.slug);
+        const stubFile = path.join(stubDir, "index.html");
+        fs.mkdirSync(stubDir, { recursive: true });
+        fs.writeFileSync(stubFile, stub, "utf-8");
+        console.log(`  ✓ Pre-render stub: dist/${route.slug}/index.html`);
+      }
+
+      // ── 3. Inject restore script into dist/index.html ───────────────────
       // Must run before Vue boots so the router sees the real path.
       const restoreScript = [
         `<script>`,
