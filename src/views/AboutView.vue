@@ -453,7 +453,7 @@ const statCards = [
                 </p>
                 <div class="donation-actions">
                     <a
-                        href="https://www.donationalerts.com/r/vai_programmer"
+                        href="https://yoomoney.ru/fundraise/1GA2JV51324.260304"
                         target="_blank"
                         rel="noopener noreferrer"
                         class="cta-btn cta-donate"

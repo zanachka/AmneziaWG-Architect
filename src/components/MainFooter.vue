@@ -52,7 +52,7 @@ onMounted(() => {
                 </div>
 
                 <a
-                    href="https://donatty.com/vai_prog"
+                    href="https://yoomoney.ru/fundraise/1GA2JV51324.260304"
                     target="_blank"
                     rel="noopener noreferrer"
                     class="donate-card"
@@ -62,7 +62,7 @@ onMounted(() => {
                     </div>
                     <div class="dc-content">
                         <span class="dc-title">Поддержать проект</span>
-                        <span class="dc-desc">Donatty</span>
+                        <span class="dc-desc">Yoomoney</span>
                     </div>
                     <ChevronRight class="dc-arrow" :size="18" />
                 </a>
