@@ -85,12 +85,12 @@ const routes: RouteRecordRaw[] = [
     name: "iaa",
     component: () => import("@/views/IaaView.vue"),
     meta: {
-      title: "IAA — AmneziaWG Architect",
+      title: "IAA — Веб-панель VPN",
       description:
-        "Install AmneziaWG Anywhere — генератор команд для установки и управления AmneziaWG на любой платформе.",
-      ogTitle: "IAA — AmneziaWG Architect",
+        "Быстрая адаптивная панель для управления Amnezia VPN и другими VPN-решениями. Telegram-интеграция, мульти-протокольная поддержка.",
+      ogTitle: "IAA — Веб-панель VPN",
       ogDescription:
-        "Генератор команд для установки AmneziaWG на Windows, Linux, macOS.",
+        "Быстрая адаптивная панель для управления VPN-серверами. Amnezia, WireGuard, XRay.",
       ogImage: `${import.meta.env.BASE_URL}assets/og-iaa.png`,
     },
   },

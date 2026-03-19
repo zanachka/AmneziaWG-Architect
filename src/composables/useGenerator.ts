@@ -69,6 +69,9 @@ export function useGenerator() {
 
     // Junk-train (0 = отключён, рекомендовано 3–7)
     junkLevel: 5,
+
+    // Режим роутера (минимальные шумы для слабых устройств)
+    routerMode: false,
   });
 
   // ── Состояние UI ──────────────────────────────────────────────────────────
@@ -115,10 +118,14 @@ export function useGenerator() {
       mtu: config.mtu,
       junkLevel: config.junkLevel,
       iterCount: iterCount.value,
+      routerMode: config.routerMode,
     });
 
     const label = PROFILE_LABELS[config.profile] ?? config.profile;
     addLog(`✦ Сгенерирован — ${label}`, "info");
+    if (config.routerMode) {
+      addLog("⚡ Роутер-режим: минимальные шумы", "warn");
+    }
   }
 
   // ── Переключение версии / интенсивности ───────────────────────────────────
@@ -385,6 +392,37 @@ export function useGenerator() {
     if (log.value.length > 4) log.value.pop();
   }
 
+  // ── Проверка доступности доменов ──────────────────────────────────────────
+
+  const domainStatus = ref<"idle" | "checking" | "ok" | "blocked" | "unknown">("idle");
+  const domainCheckedHost = ref("");
+
+  async function checkSelectedDomain() {
+    const { isKnownBlocked, checkDomain } = await import("../utils/domainCheck");
+    const host = config.customHost.trim();
+    if (!host) {
+      addLog("Укажите хост для проверки", "warn");
+      return;
+    }
+    domainStatus.value = "checking";
+    domainCheckedHost.value = host;
+
+    if (isKnownBlocked(host)) {
+      domainStatus.value = "blocked";
+      addLog(`⛔ ${host} — в списке заблокированных`, "bad");
+      return;
+    }
+
+    const result = await checkDomain(host);
+    domainStatus.value = result.accessible ? "ok" : "blocked";
+    addLog(
+      result.accessible
+        ? `✓ ${host} — доступен`
+        : `✗ ${host} — недоступен (${result.error ?? "blocked"})`,
+      result.accessible ? "ok" : "bad",
+    );
+  }
+
   // ── Подсказки по профилям ─────────────────────────────────────────────────
 
   /** Подсказки под полем кастомного хоста */
@@ -396,6 +434,8 @@ export function useGenerator() {
     http3: "HTTP/3-хост: fastly.net, cdn.gcore.com, yandex.net …",
     sip: "SIP-регистратор: sip.zadarma.com, sip.linphone.org …",
     wireguard_noise: "WireGuard Noise_IK — хост не используется",
+    tls_to_quic: "TLS+QUIC: vk.com, yandex.ru, ozon.ru …",
+    quic_burst: "QUIC-burst: fastly.net, cdn-apple.com, yastatic.net …",
     random:
       "Пул выбирается по случайному профилю (опционально укажите свой хост)",
   };
@@ -409,6 +449,8 @@ export function useGenerator() {
     http3: "HTTP/3-домен (напр., vk.com)",
     sip: "SIP-сервер (напр., sip.zadarma.com)",
     wireguard_noise: "Хост не используется для этого профиля",
+    tls_to_quic: "TLS→QUIC хост (напр., vk.com)",
+    quic_burst: "QUIC-хост (напр., fastly.net)",
     random: "Свой домен (опционально)",
   };
 
@@ -416,6 +458,9 @@ export function useGenerator() {
 
   /** true если для текущего профиля поле хоста актуально */
   const showCustomHost = computed(() => config.profile !== "wireguard_noise");
+
+  /** true если включён режим роутера */
+  const isRouterMode = computed(() => config.routerMode);
 
   /** true для AWG 1.0 (CPS не поддерживается) */
   const isCPSSupported = computed(() => version.value !== "1.0");
@@ -459,9 +504,15 @@ export function useGenerator() {
     showCustomHost,
     isCPSSupported,
     isFullObfuscation,
+    isRouterMode,
     intensityLabel,
     iterDots,
     hintMap,
     placeholderMap,
+
+    // Проверка доменов
+    domainStatus,
+    domainCheckedHost,
+    checkSelectedDomain,
   };
 }

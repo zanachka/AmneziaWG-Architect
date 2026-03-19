@@ -29,7 +29,7 @@ import type {
    Types
    ═══════════════════════════════════════════════════════════════════════════ */
 
-export type MkTab = "update" | "merge";
+export type MkTab = "update" | "merge" | "inspect";
 
 export interface MkSlot {
   id: number;
@@ -426,6 +426,87 @@ export function useMergeKeys() {
   }
 
   /* ══════════════════════════════════════════════════════════════════════
+     Tab 3: Key Inspector
+     ══════════════════════════════════════════════════════════════════════ */
+
+  const inspectInput = ref("");
+  const inspectParsed: Ref<VpnConfig | null> = ref(null);
+  const inspectError = ref("");
+  const inspectState = ref<"idle" | "parsed" | "error">("idle");
+  const inspectEditing = ref(false);
+  const inspectEditJson = ref("");
+
+  function inspectKey() {
+    try {
+      const val = inspectInput.value.trim();
+      if (!val) throw new Error("Вставьте vpn:// ключ");
+      inspectParsed.value = vpnDecode(val);
+      inspectEditJson.value = JSON.stringify(inspectParsed.value, null, 4);
+      inspectState.value = "parsed";
+      inspectError.value = "";
+    } catch (err) {
+      inspectError.value = err instanceof Error ? err.message : String(err);
+      inspectState.value = "error";
+      inspectParsed.value = null;
+    }
+  }
+
+  function startEditing() {
+    if (!inspectParsed.value) return;
+    inspectEditJson.value = JSON.stringify(inspectParsed.value, null, 4);
+    inspectEditing.value = true;
+  }
+
+  function saveEdit() {
+    try {
+      const parsed = JSON.parse(inspectEditJson.value) as VpnConfig;
+      const encoded = vpnEncode(parsed);
+      inspectInput.value = encoded;
+      inspectParsed.value = parsed;
+      inspectEditJson.value = JSON.stringify(parsed, null, 4);
+      inspectEditing.value = false;
+      inspectState.value = "parsed";
+      inspectError.value = "";
+    } catch (err) {
+      inspectError.value = "Невалидный JSON: " + (err instanceof Error ? err.message : String(err));
+    }
+  }
+
+  function cancelEdit() {
+    inspectEditing.value = false;
+    if (inspectParsed.value) {
+      inspectEditJson.value = JSON.stringify(inspectParsed.value, null, 4);
+    }
+  }
+
+  function clearInspect() {
+    inspectInput.value = "";
+    inspectParsed.value = null;
+    inspectError.value = "";
+    inspectState.value = "idle";
+    inspectEditing.value = false;
+    inspectEditJson.value = "";
+  }
+
+  /* ── Slot validation ──────────────────────────────────────────────────── */
+
+  const slotValid = ref<Record<number, boolean | null>>({});
+
+  function validateSlot(idx: number) {
+    const val = mergeSlots.value[idx]?.value?.trim();
+    if (!val) {
+      slotValid.value[idx] = null;
+      return;
+    }
+    try {
+      vpnDecode(val);
+      slotValid.value[idx] = true;
+    } catch {
+      slotValid.value[idx] = false;
+    }
+  }
+
+  /* ══════════════════════════════════════════════════════════════════════
      How-it-works collapse state
      ══════════════════════════════════════════════════════════════════════ */
 
@@ -446,7 +527,7 @@ export function useMergeKeys() {
 
   function initFromRoute(tabParam?: string | null) {
     loadPendingCfg();
-    if (tabParam === "merge" || tabParam === "update") {
+    if (tabParam === "merge" || tabParam === "update" || tabParam === "inspect") {
       switchTab(tabParam);
     }
   }
@@ -506,6 +587,23 @@ export function useMergeKeys() {
     clearAllSlots,
     mergeDecodeSlot,
     mergeContainers,
+
+    // Tab 3: Inspector
+    inspectInput,
+    inspectParsed,
+    inspectError,
+    inspectState,
+    inspectEditing,
+    inspectEditJson,
+    inspectKey,
+    startEditing,
+    saveEdit,
+    cancelEdit,
+    clearInspect,
+
+    // Slot validation
+    slotValid,
+    validateSlot,
 
     // Shared
     copyToClipboard,

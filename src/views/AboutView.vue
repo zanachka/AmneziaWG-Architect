@@ -53,7 +53,31 @@ const timelineEvents = [
         title: "Первый прототип",
         icon: Rocket,
         color: "amber",
-        desc: "Чистый HTML/CSS/JS, один файл, базовая генерация параметров Jc, Jmin, Jmax и случайных H/S. Всё работало, но выглядело как блокнот из 2005 года.",
+        desc: "Чистый HTML/CSS/JS, один файл, базовая генерация параметров Jc, Jmin, Jmax и случайных H/S. Работающий PoC без дизайна.",
+    },
+    {
+        version: "0.2",
+        date: "Фикс",
+        title: "Исправление HEX-генерации",
+        icon: Bug,
+        color: "red",
+        desc: "Критическая ошибка: невалидный HEX в script.js вызывал краш клиента. Исправлено, добавлена валидация assertEvenHex.",
+    },
+    {
+        version: "0.3",
+        date: "CPS-теги",
+        title: "Селективные CPS-теги",
+        icon: Code,
+        color: "green",
+        desc: "Поддержка <c>, <t>, <r>, <rc>, <rd> тегов с возможностью включения/выключения каждого. Синхронизация I1-генераторов с тегами пользователя.",
+    },
+    {
+        version: "0.4",
+        date: "AWG 1.0",
+        title: "Оптимизация Junk для AWG 1.0",
+        icon: Wrench,
+        color: "amber",
+        desc: "Требования официального клиента: Jc ≥ 4, Jmax > 81 для AWG 1.0. Корректировка генератора под ограничения протокола.",
     },
     {
         version: "0.5",
@@ -61,38 +85,62 @@ const timelineEvents = [
         title: "MergeKeys и vpn://",
         icon: GitMerge,
         color: "green",
-        desc: "Добавлен модуль MergeKeys — декодирование, патчинг и объединение vpn://-ключей прямо в браузере. Появилась поддержка pako/zlib для работы с бинарными данными.",
+        desc: "Модуль MergeKeys — декодирование, патчинг и объединение vpn://-ключей в браузере. Поддержка pako/zlib, base64url кодек с 4-байт заголовком.",
+    },
+    {
+        version: "0.6",
+        date: "Browser FP",
+        title: "Browser Fingerprint и QUIC/HTTP3",
+        icon: Eye,
+        color: "amber",
+        desc: "Профильные таблицы размеров пакетов по браузерам (Chrome, Firefox, Safari, Yandex). Адаптивный padding для QUIC Initial, 0-RTT, HTTP/3.",
+    },
+    {
+        version: "0.7",
+        date: "Дизайн",
+        title: "Глобальный редизайн UI",
+        icon: Paintbrush,
+        color: "green",
+        desc: "Полная переработка интерфейса, MergeKeys в стиле основного генератора. Мобильная адаптивность, исправление overflow CPS при MTU.",
     },
     {
         version: "1.0",
         date: "Перерождение",
-        title: "Переезд на Vue 3 + TypeScript",
+        title: "Vue 3 + TypeScript + SPA",
         icon: Sparkles,
         color: "amber",
-        desc: "Полный переезд с монолитного HTML на Vue 3, Vite, TypeScript. Компонентная архитектура, реактивное состояние, SPA-роутинг. UI переписан с нуля — тёмная тема, amber-акценты, анимации.",
+        desc: "Миграция на Vue 3, Vite, TypeScript. Компонентная архитектура (utils/composables/views), SPA-роутинг, GitHub Pages с pre-render stubs. UI полностью с нуля — тёмная тема, amber-акценты, анимации.",
     },
     {
         version: "1.1",
         date: "Расширение",
-        title: "AWG 2.0, CPS, профили мимикрии",
+        title: "AWG 2.0, CPS, 7+ профилей",
         icon: Layers,
         color: "green",
-        desc: "Поддержка AWG 2.0 с диапазонами H1–H4, параметрами S3/S4, полной цепочкой CPS (I1–I5). 7+ профилей мимикрии (QUIC, TLS, DTLS, SIP, HTTP/3). Browser Fingerprint, история генераций, feedback-система.",
+        desc: "AWG 2.0 с диапазонами H1–H4, S3/S4, полная CPS-цепочка I1–I5. 7 профилей мимикрии (QUIC, TLS, DTLS, SIP, HTTP/3, Noise_IK). Feedback-система с автоусилением, история генераций.",
     },
     {
-        version: "1.1+",
-        date: "Сейчас",
-        title: "Непрерывное улучшение",
-        icon: Wrench,
+        version: "1.2",
+        date: "Инфра",
+        title: "SPA-роутинг, донаты, деплой",
+        icon: Globe,
         color: "amber",
-        desc: "Групповые ячейки параметров с быстрым копированием, интеграция генератора с MergeKeys через sessionStorage, адаптивная вёрстка, FAQ в двухколоночном grid на десктопе, десятки анимаций и микровзаимодействий.",
+        desc: "Относительные пути для file://, runtime-определение base path, pre-render stubs для SEO-ботов. CI/CD: build → deploy → release. Переход на Yoomoney.",
+    },
+    {
+        version: "2.0",
+        date: "Сейчас",
+        title: "Router Mode, Inspector, композитные профили",
+        icon: Star,
+        color: "green",
+        desc: "Режим роутера для NanoPi/Keenetic/OpenWrt. Инспектор и редактор vpn://-ключей. Композитные профили TLS→QUIC и QUIC Burst. Проверка доступности доменов. 133+ автотестов (vitest). Обновлённая IAA-страница. Скрипты запуска для Win/Linux/macOS.",
     },
 ];
 
 const statCards = [
-    { label: "Профили мимикрии", value: "7+", icon: Eye },
+    { label: "Профили мимикрии", value: "9+", icon: Eye },
     { label: "Параметров генерации", value: "18+", icon: FileCode },
-    { label: "Строк TypeScript", value: "5000+", icon: Terminal },
+    { label: "Автотестов", value: "133+", icon: Terminal },
     { label: "Серверов и трекеров", value: "0", icon: ShieldCheck },
 ];
 </script>
@@ -202,7 +250,6 @@ const statCards = [
             </p>
 
             <div class="timeline">
-                <div class="timeline-line"></div>
                 <div
                     v-for="(ev, idx) in timelineEvents"
                     :key="idx"
@@ -755,23 +802,34 @@ const statCards = [
 .timeline {
     position: relative;
     margin-top: 24px;
-    padding-left: 28px;
-}
-
-.timeline-line {
-    position: absolute;
-    top: 8px;
-    bottom: 8px;
-    left: 13px;
-    width: 2px;
-    background: linear-gradient(180deg, var(--amber) 0%, var(--border3) 100%);
-    border-radius: 2px;
+    padding-left: 40px;
 }
 
 .timeline-item {
     position: relative;
-    margin-bottom: 10px;
+    margin-bottom: 12px;
     animation: tlFadeIn 0.4s var(--ease-snap) both;
+}
+
+/* Соединительная линия МЕЖДУ точками (не через них) */
+.timeline-item::before {
+    content: "";
+    position: absolute;
+    left: -27px;
+    top: 42px; /* ниже точки */
+    bottom: -12px; /* до следующего элемента */
+    width: 2px;
+    background: linear-gradient(
+        180deg,
+        rgba(232, 168, 64, 0.3) 0%,
+        rgba(232, 168, 64, 0.08) 100%
+    );
+    border-radius: 2px;
+}
+
+/* Последний элемент — без линии вниз */
+.timeline-item:last-child::before {
+    display: none;
 }
 
 @keyframes tlFadeIn {
@@ -787,10 +845,10 @@ const statCards = [
 
 .tl-dot {
     position: absolute;
-    left: -28px;
-    top: 14px;
-    width: 26px;
-    height: 26px;
+    left: -40px;
+    top: 12px;
+    width: 28px;
+    height: 28px;
     border-radius: 50%;
     display: flex;
     align-items: center;
@@ -800,20 +858,26 @@ const statCards = [
 }
 
 .tl-dot-amber {
-    background: rgba(232, 168, 64, 0.12);
+    background: var(--bg2);
     border: 2px solid var(--amber);
     color: var(--amber);
 }
 
 .tl-dot-green {
-    background: rgba(92, 184, 122, 0.12);
+    background: var(--bg2);
     border: 2px solid var(--green);
     color: var(--green);
 }
 
+.tl-dot-red {
+    background: var(--bg2);
+    border: 2px solid var(--red);
+    color: var(--red);
+}
+
 .timeline-item.open .tl-dot {
     transform: scale(1.15);
-    box-shadow: 0 0 12px rgba(232, 168, 64, 0.2);
+    box-shadow: 0 0 14px rgba(232, 168, 64, 0.25);
 }
 
 .tl-content {
@@ -1335,13 +1399,17 @@ const statCards = [
     }
 
     .timeline {
-        padding-left: 24px;
+        padding-left: 34px;
     }
 
     .tl-dot {
-        left: -24px;
-        width: 22px;
-        height: 22px;
+        left: -34px;
+        width: 24px;
+        height: 24px;
+    }
+
+    .timeline-item::before {
+        left: -23px;
     }
 
     .tl-head {

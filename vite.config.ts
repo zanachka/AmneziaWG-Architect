@@ -1,4 +1,5 @@
-import { defineConfig, type Plugin } from "vite";
+import { defineConfig } from "vitest/config";
+import type { Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
 import path from "path";
 import fs from "fs";
@@ -38,12 +39,12 @@ const ROUTE_STUBS: RouteStub[] = [
   },
   {
     slug: "iaa",
-    title: "IAA — AmneziaWG Architect",
+    title: "IAA — Веб-панель VPN",
     description:
-      "Install AmneziaWG Anywhere — генератор команд для установки и управления AmneziaWG на любой платформе.",
-    ogTitle: "IAA — AmneziaWG Architect",
+      "Быстрая адаптивная панель для управления Amnezia VPN и другими VPN-решениями.",
+    ogTitle: "IAA — Веб-панель VPN",
     ogDescription:
-      "Генератор команд для установки AmneziaWG на Windows, Linux, macOS.",
+      "Быстрая адаптивная панель для управления VPN-серверами. Amnezia, WireGuard, XRay.",
     ogImage: "og-iaa.png",
   },
 ];
@@ -365,5 +366,11 @@ export default defineConfig({
   server: {
     port: 3000,
     open: true,
+  },
+
+  test: {
+    globals: true,
+    environment: "node",
+    include: ["src/**/__tests__/**/*.test.ts"],
   },
 });

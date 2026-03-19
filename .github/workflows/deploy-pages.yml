@@ -105,6 +105,25 @@ jobs:
         with:
           path: dist
 
+      # Copy launcher scripts into dist for standalone package
+      - name: 📋 Copy launcher scripts to dist
+        run: |
+          cp scripts/serve.sh dist/serve.sh
+          cp scripts/serve.ps1 dist/serve.ps1
+          cp scripts/serve.bat dist/serve.bat
+          chmod +x dist/serve.sh
+          echo "✅ Launcher scripts copied"
+
+      # Standalone downloadable artifact (always available, not just for tags)
+      - name: 📦 Upload standalone artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: amneziawg-architect-standalone
+          path: |
+            dist/
+            scripts/
+          retention-days: 30
+
       # Keep dist/ for the release job (runs in same runner via needs)
       - name: 💾 Cache dist for release job
         if: github.ref_type == 'tag'
@@ -211,6 +230,23 @@ jobs:
             echo "|------|-------------|"
             echo "| \`dist-${TAG}.zip\` | Built files (ZIP) |"
             echo "| \`dist-${TAG}.tar.gz\` | Built files (TAR.GZ) |"
+            echo ""
+            echo "## 🚀 Quick Start"
+            echo ""
+            echo "Скачайте архив, распакуйте и запустите:"
+            echo ""
+            echo '```bash'
+            echo "# Linux / macOS"
+            echo "./scripts/serve.sh"
+            echo ""
+            echo "# Windows (PowerShell)"
+            echo "./scripts/serve.ps1"
+            echo ""
+            echo "# Windows (CMD)"
+            echo "scripts\\serve.bat"
+            echo '```'
+            echo ""
+            echo "Скрипт автоматически найдёт bun/npm/python или установит bun."
           } > RELEASE_NOTES.md
 
           cat RELEASE_NOTES.md

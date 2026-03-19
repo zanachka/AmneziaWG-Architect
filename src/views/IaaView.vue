@@ -26,11 +26,22 @@ import {
   ArrowUpCircle,
   Bell,
   Github,
+  Globe,
+  MessageCircle,
+  Sparkles,
 } from "lucide-vue-next";
 
 /* ── Platform cycle animation ────────────────────────────────── */
 
-const platforms = ["Windows", "Linux", "macOS"] as const;
+const platforms = [
+  "Amnezia",
+  "WireGuard",
+  "XRay",
+  "VLESS",
+  "Shadowsocks",
+  "OpenVPN",
+  "Outline",
+] as const;
 const currentIndex = ref(0);
 const leavingIndex = ref<number | null>(null);
 let cycleTimer: ReturnType<typeof setInterval> | null = null;
@@ -72,44 +83,44 @@ interface FeatureCard {
 
 const features: FeatureCard[] = [
   {
-    icon: Download,
-    title: "Установка AmneziaWG",
-    desc: "Команды для установки сервера AmneziaWG на Linux (Ubuntu / Debian / CentOS) и клиентов для Windows, macOS и Android.",
+    icon: Globe,
+    title: "Веб-панель управления",
+    desc: "Быстрая адаптивная панель для управления VPN-серверами из браузера. Amnezia, WireGuard, XRay и другие решения — всё в одном месте.",
+    status: "wip",
+    statusLabel: "В разработке",
+  },
+  {
+    icon: Zap,
+    title: "Мгновенные операции",
+    desc: "Создание и удаление клиентов, обновление конфигурации, перезапуск сервисов — всё в один клик без SSH.",
+    status: "wip",
+    statusLabel: "В разработке",
+  },
+  {
+    icon: MessageCircle,
+    title: "Интеграция с Telegram",
+    desc: "Управляйте сервером через Telegram-бота: выдача ключей, мониторинг, уведомления о проблемах.",
+    status: "soon",
+    statusLabel: "Скоро",
+  },
+  {
+    icon: Shield,
+    title: "Мульти-протокольная поддержка",
+    desc: "Не только AmneziaWG: XRay, VLESS, Shadowsocks, OpenVPN и другие протоколы через единый интерфейс.",
     status: "soon",
     statusLabel: "Скоро",
   },
   {
     icon: RefreshCw,
-    title: "Обновление конфигурации",
-    desc: "Обновление обфускационных параметров сервера и ключей без пересоздания туннеля.",
-    status: "soon",
-    statusLabel: "Скоро",
-  },
-  {
-    icon: Upload,
-    title: "Экспорт ключей с сервера",
-    desc: "Команды для безопасного выгрузки клиентских vpn://-ключей с сервера для передачи пользователям.",
-    status: "soon",
-    statusLabel: "Скоро",
-  },
-  {
-    icon: DownloadCloud,
-    title: "Импорт ключей на сервер",
-    desc: "Добавление новых клиентов и импорт существующих конфигураций на работающий сервер.",
-    status: "soon",
-    statusLabel: "Скоро",
-  },
-  {
-    icon: Wrench,
-    title: "Быстрое исправление ошибок",
-    desc: "Диагностика и автоматические команды для исправления типичных проблем в работе AmneziaWG: ошибки рукопожатия, MTU, маршрутизация.",
+    title: "Синхронизация обфускации",
+    desc: "Обновление параметров обфускации на сервере и всех клиентах без пересоздания туннеля.",
     status: "soon",
     statusLabel: "Скоро",
   },
   {
     icon: ArrowUpCircle,
-    title: "Миграция AWG 1.0 / 1.5 → 2.0",
-    desc: "Пошаговое обновление сервера до AWG 2.0 с портированием всех клиентов и минимальными изменениями в ключах. Без потери соединений.",
+    title: "Миграция AWG 1.0/1.5 → 2.0",
+    desc: "Пошаговое обновление сервера с сохранением всех клиентов и минимальным временем простоя.",
     status: "soon",
     statusLabel: "Скоро",
   },
@@ -121,47 +132,49 @@ const features: FeatureCard[] = [
     <!-- Hero section -->
     <div class="iaa-hero">
       <div class="iaa-hero-badge">
-        <Clock :size="12" />
-        В разработке
+        <Sparkles :size="12" />
+        Новая версия
       </div>
 
       <div class="iaa-hero-title-wrap">
-        <h1 class="iaa-hero-title">
-          Install AmneziaWG<br />
-          Anywhere for
-          <span class="iaa-platform-cycle">
-            <span
-              v-for="(platform, idx) in platforms"
-              :key="platform"
-              class="iaa-platform"
-              :class="{
-                active: idx === currentIndex,
-                leaving: idx === leavingIndex,
-              }"
-            >
-              {{ platform }}
-            </span>
+        <div class="iaa-hero-line">Управляйте</div>
+        <div class="iaa-platform-cycle">
+          <span
+            v-for="(platform, idx) in platforms"
+            :key="platform"
+            class="iaa-platform"
+            :class="{
+              active: idx === currentIndex,
+              leaving: idx === leavingIndex,
+            }"
+          >
+            {{ platform }}
           </span>
-        </h1>
+        </div>
+        <div class="iaa-hero-line">из браузера</div>
       </div>
 
       <p class="iaa-hero-desc">
-        Генератор команд для установки, настройки и управления AmneziaWG на
-        любой платформе — прямо в браузере, без регистрации и отправки данных.
+        IAA — это быстрая адаптивная веб-панель для полного управления
+        VPN-серверами. От установки и настройки до мониторинга и интеграций.
       </p>
 
       <div class="iaa-hero-tags">
         <span class="iaa-tag">
-          <Terminal :size="11" />
-          Bash / PowerShell
+          <Globe :size="11" />
+          Веб-панель
         </span>
         <span class="iaa-tag">
-          <Shield :size="11" />
-          Только локально
+          <Github :size="11" />
+          Open Source
         </span>
         <span class="iaa-tag">
           <Zap :size="11" />
-          Один клик — одна команда
+          Rust + Vue
+        </span>
+        <span class="iaa-tag">
+          <MessageCircle :size="11" />
+          Telegram
         </span>
       </div>
     </div>
@@ -285,49 +298,53 @@ const features: FeatureCard[] = [
   text-transform: uppercase;
 }
 
-/* Title */
+/* Title — 3 stacked lines */
 .iaa-hero-title-wrap {
-  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
 }
 
-.iaa-hero-title {
+.iaa-hero-line {
   font-family: var(--fu);
   font-weight: 900;
   font-size: clamp(1.7rem, 5vw, 2.8rem);
   letter-spacing: -0.02em;
-  line-height: 1.18;
+  line-height: 1.2;
   color: var(--text);
 }
 
-/* Platform cycle container */
+/* Platform cycle — horizontal slide: enter from left, exit to right */
 .iaa-platform-cycle {
   position: relative;
-  display: inline-block;
-  min-width: 180px;
-  height: 1.2em;
-  vertical-align: bottom;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  height: clamp(2.6rem, 6.5vw, 4rem);
 }
 
 .iaa-platform {
   position: absolute;
-  left: 0;
-  right: 0;
+  font-family: var(--fu);
+  font-weight: 900;
+  font-size: clamp(1.7rem, 5vw, 2.8rem);
+  letter-spacing: -0.02em;
   color: transparent;
-  -webkit-text-stroke: 1px var(--accent);
+  -webkit-text-stroke: 1.5px var(--accent);
   opacity: 0;
-  transform: translateY(16px);
+  transform: translateX(-80px);
   transition:
-    opacity 0.4s cubic-bezier(0.22, 1, 0.36, 1),
-    transform 0.4s cubic-bezier(0.22, 1, 0.36, 1);
+    opacity 0.45s cubic-bezier(0.22, 1, 0.36, 1),
+    transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
   white-space: nowrap;
 }
 
 .iaa-platform.active {
   opacity: 1;
-  transform: translateY(0);
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--accent);
+  transform: translateX(0);
   text-shadow:
     0 0 24px rgba(232, 168, 64, 0.35),
     0 0 48px rgba(232, 168, 64, 0.12);
@@ -335,7 +352,7 @@ const features: FeatureCard[] = [
 
 .iaa-platform.leaving {
   opacity: 0;
-  transform: translateY(-14px);
+  transform: translateX(80px);
   transition:
     opacity 0.35s ease-in,
     transform 0.35s ease-in;

@@ -66,6 +66,10 @@ const {
     iterDots,
     hintMap,
     placeholderMap,
+    isRouterMode,
+    domainStatus,
+    domainCheckedHost,
+    checkSelectedDomain,
 } = useGenerator();
 
 const activeFaqIdx = ref<number | null>(null);
@@ -715,6 +719,12 @@ AWG-клиент будет вести себя как обычный WireGuard.
                                 <option value="sip">
                                     SIP (VoIP Signaling)
                                 </option>
+                                <option value="tls_to_quic">
+                                    TLS → QUIC (Alt-Svc)
+                                </option>
+                                <option value="quic_burst">
+                                    QUIC Burst (Multi-packet)
+                                </option>
                                 <option value="random">
                                     🎲 Случайный выбор
                                 </option>
@@ -724,15 +734,29 @@ AWG-клиент будет вести себя как обычный WireGuard.
                         <!-- Custom Host -->
                         <transition name="expand">
                             <div v-if="showCustomHost" class="field-group">
-                                <input
-                                    type="text"
-                                    v-model="config.customHost"
-                                    class="input-field"
-                                    :placeholder="
-                                        placeholderMap[config.profile]
-                                    "
-                                    @input="generate"
-                                />
+                                <div class="host-row">
+                                    <input
+                                        type="text"
+                                        v-model="config.customHost"
+                                        class="input-field"
+                                        :placeholder="
+                                            placeholderMap[config.profile]
+                                        "
+                                        @input="generate"
+                                    />
+                                    <button
+                                        class="btn btn-ghost btn-icon sm"
+                                        @click="checkSelectedDomain"
+                                        title="Проверить доступность домена"
+                                    >
+                                        <ShieldCheck :size="14" />
+                                    </button>
+                                    <span
+                                        v-if="domainStatus !== 'idle'"
+                                        class="domain-dot"
+                                        :class="domainStatus"
+                                    />
+                                </div>
                                 <div class="field-hint">
                                     {{ hintMap[config.profile] }}
                                 </div>
@@ -969,6 +993,37 @@ AWG-клиент будет вести себя как обычный WireGuard.
                                 <option :value="7">7 — Усиленный</option>
                                 <option :value="10">10 — Максимальный</option>
                             </select>
+                        </div>
+
+                        <!-- Router Mode -->
+                        <div class="field-group">
+                            <label class="field-label">
+                                <Router :size="14" class="icon-inline" />
+                                Режим роутера
+                            </label>
+                            <label class="toggle-check">
+                                <input
+                                    type="checkbox"
+                                    v-model="config.routerMode"
+                                    @change="generate"
+                                />
+                                <span class="toggle-label"
+                                    >Ограничить нагрузку для роутеров</span
+                                >
+                            </label>
+                            <transition name="fade">
+                                <div
+                                    v-if="config.routerMode"
+                                    class="alert alert-warn small-alert"
+                                >
+                                    <TriangleAlert :size="14" />
+                                    <div>
+                                        <b>Режим роутера:</b> Jc ≤ 3, Jmax ≤
+                                        128, I2–I5 отключены. Для слабых
+                                        устройств: NanoPi, Keenetic, OpenWrt.
+                                    </div>
+                                </div>
+                            </transition>
                         </div>
 
                         <!-- Generate Button -->
@@ -1308,6 +1363,84 @@ AWG-клиент будет вести себя как обычный WireGuard.
 /* ═══════════════════════════════════════════════════════════════════════════
    HomeView — Redesigned Layout v2
    ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ── Domain Check ─────────────────────────────────────────────────────── */
+
+.host-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.host-row .input-field {
+    flex: 1;
+}
+
+.domain-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+}
+
+.domain-dot.ok {
+    background: var(--green);
+    box-shadow: 0 0 6px var(--green);
+}
+
+.domain-dot.blocked {
+    background: var(--red);
+    box-shadow: 0 0 6px var(--red);
+}
+
+.domain-dot.checking {
+    background: var(--amber);
+    animation: pulse 1s infinite;
+}
+
+.domain-dot.unknown {
+    background: var(--text3);
+}
+
+@keyframes pulse {
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.3;
+    }
+}
+
+/* ── Router Mode ──────────────────────────────────────────────────────── */
+
+.toggle-check {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+.toggle-check input[type="checkbox"] {
+    accent-color: var(--amber);
+}
+
+.toggle-label {
+    font-size: 0.82rem;
+    color: var(--text2);
+}
+
+.icon-inline {
+    vertical-align: -2px;
+    color: var(--amber);
+}
+
+.small-alert {
+    margin-top: 8px;
+    font-size: 0.75rem;
+    padding: 8px 12px;
+}
 
 .home-page {
     padding: 2rem 0 4rem;

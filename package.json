@@ -1,6 +1,6 @@
 {
   "name": "amneziawg-architect",
-  "version": "1.2.0",
+  "version": "2.0.0",
   "description": "AmneziaWG Architect — Professional Config Generator",
   "author": "Vadim Khristenko <just@vai-prog.ru>",
   "private": true,
@@ -9,6 +9,9 @@
     "dev": "vite",
     "build": "vue-tsc && vite build",
     "preview": "vite preview",
+    "test": "vitest",
+    "test:run": "vitest run",
+    "test:coverage": "vitest run --coverage",
     "legacy-build": "node build.js",
     "legacy-watch": "node build.js --watch"
   },
@@ -25,8 +28,10 @@
     "@types/node": "^25.4.0",
     "@types/pako": "^2.0.4",
     "@vitejs/plugin-vue": "^6.0.4",
+    "@vitest/coverage-v8": "^4.1.0",
     "typescript": "^5.7.3",
     "vite": "^7.3.1",
+    "vitest": "^4.1.0",
     "vue-tsc": "^3.2.5"
   },
   "repository": {

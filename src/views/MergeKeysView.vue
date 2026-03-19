@@ -33,6 +33,7 @@ import {
   ShieldAlert,
   Info,
   Check,
+  Settings2,
 } from "lucide-vue-next";
 
 const route = useRoute();
@@ -73,6 +74,21 @@ const {
   clearAllSlots,
   mergeDecodeSlot,
   mergeContainers,
+  // Tab 3: Inspector
+  inspectInput,
+  inspectParsed,
+  inspectError,
+  inspectState,
+  inspectEditing,
+  inspectEditJson,
+  inspectKey,
+  startEditing,
+  saveEdit,
+  cancelEdit,
+  clearInspect,
+  // Slot validation
+  slotValid,
+  validateSlot,
   // Shared
   copyToClipboard,
   isCopied,
@@ -87,6 +103,19 @@ const {
   // Init
   initFromRoute,
 } = useMergeKeys();
+
+/** Syntax-highlight JSON for the inspector view */
+function highlightJson(obj: unknown): string {
+  const json = JSON.stringify(obj, null, 4);
+  return json
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"([^"]+)"(?=\s*:)/g, '<span class="json-key">"$1"</span>')
+    .replace(/: "([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="json-number">$1</span>')
+    .replace(/: (true|false|null)/g, ': <span class="json-bool">$1</span>');
+}
 
 onMounted(() => {
   const tabParam = (route.query.tab as string) || null;
@@ -144,6 +173,8 @@ function pillIcon(color: string) {
         Для обновления параметров Jc/Jmin/Jmax/I1–I5 вернитесь на
         <router-link to="/">главную страницу</router-link>, нажмите
         <b>«СГЕНЕРИРОВАТЬ»</b>, затем <b>«Открыть MergeKeys»</b>.<br />
+        Вы также можете отредактировать ключ вручную во вкладке
+        <b @click="switchTab('inspect')" class="mk-notice-link">«Инспектор»</b>.<br />
         Вкладка <b>«Объединить ключи»</b> работает без генератора.
       </div>
     </div>
@@ -165,6 +196,15 @@ function pillIcon(color: string) {
       >
         <GitMerge :size="14" />
         Объединить ключи
+      </button>
+
+      <button
+        class="mk-tab-btn"
+        :class="{ active: activeTab === 'inspect' }"
+        @click="switchTab('inspect')"
+      >
+        <Eye :size="14" />
+        Инспектор
       </button>
     </div>
 
@@ -608,6 +648,112 @@ function pillIcon(color: string) {
       </div>
     </div>
     <!-- /merge pane -->
+
+    <!-- ═══════════════════════════════════════════════════════════
+         PANE 3 — Key Inspector
+         ═══════════════════════════════════════════════════════════ -->
+    <div v-if="activeTab === 'inspect'" class="mk-pane">
+      <div class="mk-card">
+        <div class="mk-card-head">
+          <Eye :size="16" class="icon-accent" />
+          <span class="mk-card-title">Инспектор ключей</span>
+        </div>
+
+        <div class="mk-card-body">
+          <!-- Input -->
+          <label class="mk-label">VPN-ключ</label>
+          <textarea
+            v-model="inspectInput"
+            class="mk-ta"
+            rows="3"
+            placeholder="vpn://..."
+          ></textarea>
+          <div class="mk-field-hint">
+            Вставьте vpn://-ключ, чтобы увидеть и отредактировать его содержимое.
+            Все операции локальны — данные не покидают браузер.
+          </div>
+
+          <!-- Actions -->
+          <div class="mk-actions">
+            <button class="mk-btn-primary" @click="inspectKey">
+              <Eye :size="14" />
+              Декодировать
+            </button>
+            <button class="mk-btn-ghost" @click="clearInspect">
+              <X :size="14" />
+              Очистить
+            </button>
+          </div>
+
+          <!-- Error -->
+          <div v-if="inspectState === 'error'" class="mk-err">
+            <XCircle :size="16" />
+            <span>{{ inspectError }}</span>
+          </div>
+
+          <!-- Parsed result -->
+          <div v-if="inspectState === 'parsed' && inspectParsed">
+            <div class="mk-ok">
+              <CheckCircle2 :size="16" />
+              <span class="mk-ok-pill">Декодировано</span>
+            </div>
+
+            <!-- Toolbar -->
+            <div class="inspect-toolbar">
+              <button
+                v-if="!inspectEditing"
+                class="mk-btn-sec"
+                @click="startEditing"
+              >
+                <Settings2 :size="14" />
+                Редактировать
+              </button>
+              <template v-else>
+                <button class="mk-btn-primary" @click="saveEdit">
+                  <Check :size="14" />
+                  Сохранить
+                </button>
+                <button class="mk-btn-ghost" @click="cancelEdit">
+                  <X :size="14" />
+                  Отмена
+                </button>
+              </template>
+              <button
+                class="mk-btn-ghost"
+                @click="copyToClipboard(inspectInput, 'inspect-key')"
+              >
+                <component
+                  :is="isCopied('inspect-key') ? Check : Copy"
+                  :size="14"
+                />
+                {{ isCopied("inspect-key") ? "Скопировано" : "Скопировать ключ" }}
+              </button>
+            </div>
+
+            <!-- View mode: highlighted JSON -->
+            <pre
+              v-if="!inspectEditing"
+              class="inspect-json"
+            ><code v-html="highlightJson(inspectParsed)" /></pre>
+
+            <!-- Edit mode: textarea -->
+            <textarea
+              v-else
+              v-model="inspectEditJson"
+              class="mk-ta mk-ta-mono"
+              rows="20"
+            ></textarea>
+
+            <!-- Edit error -->
+            <div v-if="inspectEditing && inspectError" class="mk-err">
+              <XCircle :size="14" />
+              <span>{{ inspectError }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- /inspect pane -->
   </div>
 </template>
 
@@ -1366,5 +1512,98 @@ function pillIcon(color: string) {
     margin-left: 0 !important;
     text-align: left !important;
   }
+}
+
+/* ── Inspector ──────────────────────────────────────────────────────── */
+
+.inspect-toolbar {
+  display: flex;
+  gap: 8px;
+  margin: 14px 0;
+  flex-wrap: wrap;
+  padding-bottom: 14px;
+  border-bottom: 1px solid var(--border2);
+}
+
+.inspect-json {
+  background: #060503;
+  border: 1px solid var(--border2);
+  border-radius: 10px;
+  padding: 18px;
+  overflow-x: auto;
+  font-family: var(--fm);
+  font-size: 0.72rem;
+  line-height: 1.7;
+  max-height: 550px;
+  overflow-y: auto;
+  color: var(--text);
+  white-space: pre;
+  word-wrap: break-word;
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+/* Scrollbar styling for JSON viewer */
+.inspect-json::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.inspect-json::-webkit-scrollbar-track {
+  background: transparent;
+}
+.inspect-json::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 3px;
+}
+
+/*
+ * v-html inserts spans inside <code>. In scoped CSS, :deep() penetrates
+ * the scoped attribute boundary so the child spans actually get styled.
+ */
+.inspect-json :deep(.json-key) {
+  color: var(--amber2);
+}
+
+.inspect-json :deep(.json-string) {
+  color: var(--green2);
+  word-break: break-all;
+}
+
+.inspect-json :deep(.json-number) {
+  color: var(--blue);
+}
+
+.inspect-json :deep(.json-bool) {
+  color: var(--text3);
+}
+
+.mk-ta-mono {
+  font-family: var(--fm);
+  font-size: 0.72rem;
+  line-height: 1.5;
+  min-height: 300px;
+}
+
+/* Notice link */
+.mk-notice-link {
+  cursor: pointer;
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.mk-notice-link:hover {
+  color: var(--amber3);
+}
+
+/* Accent icon in card head */
+.icon-accent {
+  color: var(--amber);
+}
+
+/* Field hint under textarea */
+.mk-field-hint {
+  font-size: 0.7rem;
+  color: var(--text3);
+  line-height: 1.4;
+  margin-top: -8px;
 }
 </style>

@@ -26,6 +26,8 @@ export type MimicProfile =
   | "dtls"
   | "http3"
   | "sip"
+  | "tls_to_quic"
+  | "quic_burst"
   | "random";
 
 export type BrowserProfile =
@@ -60,6 +62,9 @@ export interface GeneratorInput {
 
   /** Счётчик неудачных попыток (для автоматического усиления) */
   iterCount: number;
+
+  /** Режим роутера: минимальные шумы для слабых устройств (NanoPi, Keenetic, OpenWrt) */
+  routerMode: boolean;
 }
 
 /** Итоговая конфигурация AWG */
@@ -116,6 +121,8 @@ export const PROFILE_LABELS: Record<MimicProfile, string> = {
   dtls: "DTLS 1.3",
   http3: "HTTP/3",
   sip: "SIP",
+  tls_to_quic: "TLS → QUIC",
+  quic_burst: "QUIC Burst",
   random: "Random",
 };
 
@@ -1488,11 +1495,16 @@ function mkSIP(input: GeneratorInput, iv: number): string {
  */
 function mkEntropy(input: GeneratorInput, idx: number, iv: number): string {
   const mtu = input.mtu;
+
+  // Бимодальное распределение: 60% маленькие (ACK-like), 40% большие (DATA-like)
+  const isBig = rnd(1, 10) > 6;
+  const baseLen = isBig ? rnd(200, 500) : rnd(4, 20);
   const rLen = Math.min(
-    rnd(10, 40) * iv,
-    300,
+    baseLen * iv,
+    isBig ? 500 : 60,
     Math.max(0, mtu - 20 - tagOverhead(input.useTagC, input.useTagT)),
   );
+
   const rcLen = rnd(4, 12);
   const rdLen = rnd(4, 8);
 
@@ -1502,6 +1514,8 @@ function mkEntropy(input: GeneratorInput, idx: number, iv: number): string {
   const rc = input.useTagRC ? `<rc ${rcLen}>` : "";
   const rd = input.useTagRD ? `<rd ${rdLen}>` : "";
   const b = iv >= 2 ? `<b 0x${rh(rnd(4, 8 * iv))}>` : "";
+  // Второй бинарный блок для асимметрии при высоком iv
+  const b2 = iv >= 3 ? `<b 0x${rh(rnd(2, 4))}>` : "";
 
   const patterns = [
     b + r + t + rc + c + rd,
@@ -1509,9 +1523,12 @@ function mkEntropy(input: GeneratorInput, idx: number, iv: number): string {
     rc + b + r + c + t + rd,
     t + r + c + rc + b + rd,
     r + rc + b + t + c + rd,
+    b2 + t + r + b + rc + c + rd,
+    rd + b + rc + r + t + c + b2,
+    c + b + b2 + t + rc + r + rd,
   ];
 
-  const result = patterns[(idx + rnd(0, 4)) % patterns.length];
+  const result = patterns[(idx + rnd(0, patterns.length - 1)) % patterns.length];
   return result || "<r 10>";
 }
 
@@ -1536,6 +1553,8 @@ export function genI1(
     dtls: mkDTLS,
     http3: mkHTTP3,
     sip: mkSIP,
+    tls_to_quic: mkTLS,     // I1 = TLS, I2 = QUIC (задаётся в genCfg)
+    quic_burst: mkQUICi,    // I1 = QUIC Initial, I2-I3 задаются в genCfg
   };
 
   if (profile === "random") {
@@ -1597,38 +1616,63 @@ export function genCfg(input: GeneratorInput): AWGConfig {
   // Размывает временной и размерный профиль старта сессии.
   // Для AWG 1.0: Jc ≥ 4 и Jmax > 81 — требования официального клиента.
   const minJc = version === "1.0" ? 4 : 3;
-  const jcv = Math.max(
+  let jcv = Math.max(
     minJc,
     Math.min(10, junkLevel + (intensity === "high" ? 2 : 0)),
   );
-  const jmin = 64 + boost * 2;
+  let jmin = 64 + boost * 2;
   const baseJmax = version === "1.0" ? 128 : 256;
-  const jmax = Math.min(1280, baseJmax + iv * 150 + boost * 10);
+  let jmax = Math.min(1280, baseJmax + iv * 150 + boost * 10);
+
+  // ── Router Low-Power Mode ─────────────────────────────────────────────────
+  // Жёсткие лимиты для роутеров с ограниченными ресурсами.
+  // Применяются ПОСЛЕ базовых вычислений — только уменьшают значения.
+  // minJc сохраняется для AWG 1.0 (протокольное требование).
+  if (input.routerMode) {
+    s1 = Math.min(s1, 20);
+    s2 = Math.min(s2, 20);
+    if (s2 === s1 + 56) s2 = Math.min(s2 + 1, 20);
+    jcv = Math.max(minJc, Math.min(jcv, 2));
+    jmin = Math.min(jmin, 40);
+    jmax = Math.min(jmax, 128);
+  }
 
   // ── CPS Signature Chain (I1–I5) ───────────────────────────────────────────
   // Не генерируем I1–I5 для AWG 1.0 — там эти параметры не поддерживаются.
   const hasCPS = version !== "1.0";
-  const i1 = hasCPS ? genI1(input, profile, iv) : "";
-  const i2 = hasCPS
-    ? input.mimicAll
-      ? genI1(input, profile, iv)
-      : mkEntropy(input, 1, iv)
-    : "";
-  const i3 = hasCPS
-    ? input.mimicAll
-      ? genI1(input, profile, iv)
-      : mkEntropy(input, 2, iv)
-    : "";
-  const i4 = hasCPS
-    ? input.mimicAll
-      ? genI1(input, profile, iv)
-      : mkEntropy(input, 3, iv)
-    : "";
-  const i5 = hasCPS
-    ? input.mimicAll
-      ? genI1(input, profile, iv)
-      : mkEntropy(input, 4, iv)
-    : "";
+  const isComposite = profile === "tls_to_quic" || profile === "quic_burst";
+
+  let i1 = "", i2 = "", i3 = "", i4 = "", i5 = "";
+
+  if (!hasCPS) {
+    // AWG 1.0 — без CPS
+  } else if (isComposite && profile === "tls_to_quic") {
+    // TLS ClientHello → QUIC Initial → Entropy
+    i1 = mkTLS(input, iv);
+    i2 = mkQUICi(input, iv);
+    i3 = mkEntropy(input, 2, iv);
+    i4 = mkEntropy(input, 3, iv);
+    i5 = mkEntropy(input, 4, iv);
+  } else if (isComposite && profile === "quic_burst") {
+    // QUIC Initial → QUIC 0-RTT → HTTP/3 → Entropy
+    i1 = mkQUICi(input, iv);
+    i2 = mkQUIC0(input, iv);
+    i3 = mkHTTP3(input, iv);
+    i4 = mkEntropy(input, 3, iv);
+    i5 = mkEntropy(input, 4, iv);
+  } else {
+    // Стандартная логика
+    i1 = genI1(input, profile, iv);
+    i2 = input.mimicAll ? genI1(input, profile, iv) : mkEntropy(input, 1, iv);
+    i3 = input.mimicAll ? genI1(input, profile, iv) : mkEntropy(input, 2, iv);
+    i4 = input.mimicAll ? genI1(input, profile, iv) : mkEntropy(input, 3, iv);
+    i5 = input.mimicAll ? genI1(input, profile, iv) : mkEntropy(input, 4, iv);
+  }
+
+  // Router mode: отключить I2–I5 для снижения нагрузки
+  if (input.routerMode && hasCPS) {
+    i2 = ""; i3 = ""; i4 = ""; i5 = "";
+  }
 
   return {
     version,
