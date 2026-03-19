@@ -1,12 +1,34 @@
-name: Deploy to GitHub Pages
+# ═══════════════════════════════════════════════════════════════════════════════
+# AmneziaWG Architect — CI/CD Pipeline
+#
+# Architecture:
+#
+#   ┌──────────┐     ┌───────────┐     ┌──────────────┐
+#   │  lint &  │     │   build   │     │   deploy     │
+#   │  test    ├────►│ + bundle  ├──┬─►│  gh-pages    │
+#   └──────────┘     └───────────┘  │  └──────────────┘
+#                                   │  ┌──────────────┐
+#                                   ├─►│  release     │
+#                                   │  └──────────────┘
+#                                   │  ┌──────────────┐
+#                                   └─►│  standalone  │
+#                                      │  artifact    │
+#                                      └──────────────┘
+#
+# - lint+test and build run in PARALLEL (both need install, but test doesn't
+#   need build output and build doesn't need test results)
+# - deploy + release fan out from build (parallel when tag push)
+# - standalone artifact is always uploaded from build
+# ═══════════════════════════════════════════════════════════════════════════════
+
+name: CI/CD Pipeline
 
 on:
   push:
-    branches:
-      - main
-      - master
-    tags:
-      - "v*.*.*"
+    branches: [main, master]
+    tags: ["v*.*.*"]
+  pull_request:
+    branches: [main, master]
   workflow_dispatch:
     inputs:
       debug:
@@ -14,13 +36,18 @@ on:
         required: false
         default: "false"
         type: boolean
+      skip_deploy:
+        description: "Skip deployment (build + test only)"
+        required: false
+        default: "false"
+        type: boolean
 
 concurrency:
-  group: pages-deploy-${{ github.ref }}
+  group: ci-${{ github.ref }}
   cancel-in-progress: true
 
 permissions:
-  contents: write # write needed for release creation
+  contents: write
   pages: write
   id-token: write
 
@@ -28,104 +55,129 @@ env:
   BUN_VERSION: latest
   NODE_ENV: production
 
+# ═══════════════════════════════════════════════════════════════════════════════
 jobs:
-  # ─────────────────────────────────────────────
-  # JOB 1 — Build
-  # ─────────────────────────────────────────────
-  build:
-    name: 🔨 Build & Upload Artifact
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 1 — Lint & Test (runs in parallel with build)
+  # ───────────────────────────────────────────────────────────────────────────
+  test:
+    name: 🧪 Lint, Type-check & Test
     runs-on: ubuntu-latest
-
-    outputs:
-      build-time: ${{ steps.meta.outputs.build-time }}
-      dist-size: ${{ steps.meta.outputs.dist-size }}
+    timeout-minutes: 10
 
     steps:
-      - name: 📥 Checkout repository
-        uses: actions/checkout@v6
-        with:
-          fetch-depth: 0 # full history — needed for tag detection
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
 
-      - name: 🔍 Print workflow context
-        run: |
-          echo "──────────────────────────────────────"
-          echo "  Repository : ${{ github.repository }}"
-          echo "  Ref        : ${{ github.ref }}"
-          echo "  Ref type   : ${{ github.ref_type }}"
-          echo "  Commit SHA : ${{ github.sha }}"
-          echo "  Actor      : ${{ github.actor }}"
-          echo "  Event      : ${{ github.event_name }}"
-          echo "  Debug mode : ${{ inputs.debug || 'false' }}"
-          echo "──────────────────────────────────────"
-
-      - name: 🥟 Setup Bun ${{ env.BUN_VERSION }}
+      - name: 🥟 Setup Bun
         uses: oven-sh/setup-bun@v2
         with:
           bun-version: ${{ env.BUN_VERSION }}
 
-      - name: 🔎 Show Bun version
-        run: bun --version
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
 
-      - name: 📦 Install dependencies (frozen lockfile)
+      - name: 🔍 Type-check
+        run: bun vue-tsc --noEmit
+
+      - name: 🧪 Run tests with coverage
+        run: bun run test:coverage
+
+      - name: 📊 Upload coverage report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: coverage/
+          retention-days: 14
+
+      - name: 📋 Test summary
+        if: always()
         run: |
-          echo "::group::bun install"
-          bun install --frozen-lockfile
-          echo "::endgroup::"
+          echo "### 🧪 Test Results" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          if [ -f coverage/coverage-summary.json ]; then
+            LINES=$(cat coverage/coverage-summary.json | python3 -c "import sys,json; d=json.load(sys.stdin)['total']['lines']; print(f\"{d['pct']}%\")" 2>/dev/null || echo "N/A")
+            echo "| Metric | Value |" >> "$GITHUB_STEP_SUMMARY"
+            echo "|--------|-------|" >> "$GITHUB_STEP_SUMMARY"
+            echo "| Line coverage | ${LINES} |" >> "$GITHUB_STEP_SUMMARY"
+          fi
 
-      - name: 🧪 Type-check
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 2 — Build (runs in parallel with test)
+  # ───────────────────────────────────────────────────────────────────────────
+  build:
+    name: 🔨 Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    outputs:
+      build-time: ${{ steps.meta.outputs.build-time }}
+      dist-size: ${{ steps.meta.outputs.dist-size }}
+      file-count: ${{ steps.meta.outputs.file-count }}
+      version: ${{ steps.meta.outputs.version }}
+
+    steps:
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: 🥟 Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+
+      - name: 📦 Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: 🏗️ Production build
+        run: bun run build
+
+      - name: 📋 Copy launcher scripts
         run: |
-          echo "::group::Type check"
-          bun run typecheck 2>&1 || bun run tsc --noEmit 2>&1 || echo "⚠️  No typecheck script found, skipping"
-          echo "::endgroup::"
+          cp scripts/serve.sh dist/serve.sh
+          cp scripts/serve.ps1 dist/serve.ps1
+          cp scripts/serve.bat dist/serve.bat
+          chmod +x dist/serve.sh
 
-      - name: 🏗️ Build
-        run: |
-          echo "::group::Production build"
-          bun run build
-          echo "::endgroup::"
-
-      - name: 📊 Collect build metadata
+      - name: 📊 Collect metadata
         id: meta
         run: |
           BUILD_TIME=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
           DIST_SIZE=$(du -sh dist | cut -f1)
           FILE_COUNT=$(find dist -type f | wc -l | tr -d ' ')
-          echo "build-time=$BUILD_TIME"    >> "$GITHUB_OUTPUT"
-          echo "dist-size=$DIST_SIZE"      >> "$GITHUB_OUTPUT"
-          echo ""
-          echo "──────────────────────────────────────"
-          echo "  Build time  : $BUILD_TIME"
-          echo "  Dist size   : $DIST_SIZE"
-          echo "  File count  : $FILE_COUNT"
-          echo "──────────────────────────────────────"
-          find dist -type f | sort
+          VERSION=$(cat package.json | python3 -c "import sys,json; print(json.load(sys.stdin)['version'])")
+
+          echo "build-time=$BUILD_TIME"  >> "$GITHUB_OUTPUT"
+          echo "dist-size=$DIST_SIZE"    >> "$GITHUB_OUTPUT"
+          echo "file-count=$FILE_COUNT"  >> "$GITHUB_OUTPUT"
+          echo "version=$VERSION"        >> "$GITHUB_OUTPUT"
+
+          echo "### 🔨 Build Metadata" >> "$GITHUB_STEP_SUMMARY"
+          echo "" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Metric | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|--------|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | \`${VERSION}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Build time | ${BUILD_TIME} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Dist size | ${DIST_SIZE} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Files | ${FILE_COUNT} |" >> "$GITHUB_STEP_SUMMARY"
 
       - name: 📤 Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
           path: dist
 
-      # Copy launcher scripts into dist for standalone package
-      - name: 📋 Copy launcher scripts to dist
-        run: |
-          cp scripts/serve.sh dist/serve.sh
-          cp scripts/serve.ps1 dist/serve.ps1
-          cp scripts/serve.bat dist/serve.bat
-          chmod +x dist/serve.sh
-          echo "✅ Launcher scripts copied"
-
-      # Standalone downloadable artifact (always available, not just for tags)
       - name: 📦 Upload standalone artifact
         uses: actions/upload-artifact@v4
         with:
-          name: amneziawg-architect-standalone
+          name: amneziawg-architect-v${{ steps.meta.outputs.version }}
           path: |
             dist/
             scripts/
           retention-days: 30
 
-      # Keep dist/ for the release job (runs in same runner via needs)
-      - name: 💾 Cache dist for release job
+      - name: 📦 Upload dist for release
         if: github.ref_type == 'tag'
         uses: actions/upload-artifact@v4
         with:
@@ -133,147 +185,166 @@ jobs:
           path: dist
           retention-days: 1
 
-  # ─────────────────────────────────────────────
-  # JOB 2 — Deploy to GitHub Pages
-  #          (only on branch pushes, not tags)
-  # ─────────────────────────────────────────────
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 3 — Deploy to GitHub Pages
+  #   Runs after BOTH test + build pass (on branch push only)
+  # ───────────────────────────────────────────────────────────────────────────
   deploy:
     name: 🚀 Deploy to GitHub Pages
-    if: github.ref_type == 'branch'
-    needs: build
+    if: |
+      github.ref_type == 'branch' &&
+      github.event_name != 'pull_request' &&
+      inputs.skip_deploy != 'true'
+    needs: [test, build]
     runs-on: ubuntu-latest
+    timeout-minutes: 5
 
     environment:
       name: github-pages
       url: ${{ steps.deploy.outputs.page_url }}
 
     steps:
-      - name: 🌐 Deploy to GitHub Pages
+      - name: 🌐 Deploy
         id: deploy
         uses: actions/deploy-pages@v4
 
-      - name: ✅ Deployment summary
+      - name: 📋 Summary
         run: |
-          echo "──────────────────────────────────────"
-          echo "  ✅ Deployed successfully!"
-          echo "  🌐 URL        : ${{ steps.deploy.outputs.page_url }}"
-          echo "  🕒 Build time : ${{ needs.build.outputs.build-time }}"
-          echo "  📦 Dist size  : ${{ needs.build.outputs.dist-size }}"
-          echo "──────────────────────────────────────"
           echo "### 🚀 Deployed to GitHub Pages" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
-          echo "| Parameter | Value |" >> "$GITHUB_STEP_SUMMARY"
-          echo "|-----------|-------|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 🌐 URL | ${{ steps.deploy.outputs.page_url }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 🕒 Built at | ${{ needs.build.outputs.build-time }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 📦 Dist size | ${{ needs.build.outputs.dist-size }} |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| 🔖 Commit | \`${{ github.sha }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| | |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|---|---|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| URL | ${{ steps.deploy.outputs.page_url }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | \`${{ needs.build.outputs.version }}\` |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Built at | ${{ needs.build.outputs.build-time }} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Size | ${{ needs.build.outputs.dist-size }} (${{ needs.build.outputs.file-count }} files) |" >> "$GITHUB_STEP_SUMMARY"
 
-  # ─────────────────────────────────────────────
-  # JOB 3 — Create GitHub Release
-  #          (only when a tag v*.*.* is pushed)
-  # ─────────────────────────────────────────────
+  # ───────────────────────────────────────────────────────────────────────────
+  # JOB 4 — Create GitHub Release
+  #   Runs after BOTH test + build pass (on tag push only)
+  #   Parallel with deploy (when tag also triggers deploy)
+  # ───────────────────────────────────────────────────────────────────────────
   release:
-    name: 🏷️ Create GitHub Release
+    name: 🏷️ GitHub Release
     if: github.ref_type == 'tag'
-    needs: build
+    needs: [test, build]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
 
     steps:
-      - name: 📥 Checkout (for changelog)
-        uses: actions/checkout@v6
+      - name: 📥 Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
-      - name: 📦 Download dist artifact
+      - name: 📦 Download dist
         uses: actions/download-artifact@v4
         with:
           name: dist-release
           path: dist
 
-      - name: 🗜️ Archive dist folder
+      - name: 🗜️ Create archives
         run: |
           TAG="${{ github.ref_name }}"
-          zip -r "dist-${TAG}.zip" dist/
-          tar -czf "dist-${TAG}.tar.gz" dist/
-          echo "✅ Archives created:"
-          ls -lh dist-*.zip dist-*.tar.gz
+          VERSION="${{ needs.build.outputs.version }}"
+
+          # ZIP and TAR.GZ of dist
+          zip -r "amneziawg-architect-${TAG}.zip" dist/ scripts/
+          tar -czf "amneziawg-architect-${TAG}.tar.gz" dist/ scripts/
+
+          echo "✅ Archives:"
+          ls -lh amneziawg-architect-${TAG}.*
 
       - name: 📝 Generate release notes
-        id: notes
         run: |
           TAG="${{ github.ref_name }}"
+          VERSION="${{ needs.build.outputs.version }}"
           PREV_TAG=$(git tag --sort=-version:refname | grep -v "^${TAG}$" | head -n 1)
-          echo "Current tag : $TAG"
-          echo "Previous tag: $PREV_TAG"
 
           {
-            echo "## 📦 Release ${TAG}"
+            echo "## AmneziaWG Architect ${TAG}"
             echo ""
-            echo "**Built at:** ${{ needs.build.outputs.build-time }}"
-            echo "**Dist size:** ${{ needs.build.outputs.dist-size }}"
+            echo "| | |"
+            echo "|---|---|"
+            echo "| **Version** | \`${VERSION}\` |"
+            echo "| **Built at** | ${{ needs.build.outputs.build-time }} |"
+            echo "| **Dist size** | ${{ needs.build.outputs.dist-size }} (${{ needs.build.outputs.file-count }} files) |"
             echo ""
+
             if [ -n "$PREV_TAG" ]; then
-              echo "## 📋 Changes since \`${PREV_TAG}\`"
+              echo "## Changes since \`${PREV_TAG}\`"
               echo ""
-              git log "${PREV_TAG}..${TAG}" --pretty=format:"- %s (%h)" --no-merges
+              # Group by conventional commit prefix
+              for prefix in feat fix refactor perf test docs style chore; do
+                COMMITS=$(git log "${PREV_TAG}..${TAG}" --pretty=format:"- %s (%h)" --no-merges | grep -i "^- ${prefix}" || true)
+                if [ -n "$COMMITS" ]; then
+                  case $prefix in
+                    feat)     LABEL="Features" ;;
+                    fix)      LABEL="Bug Fixes" ;;
+                    refactor) LABEL="Refactoring" ;;
+                    perf)     LABEL="Performance" ;;
+                    test)     LABEL="Tests" ;;
+                    docs)     LABEL="Documentation" ;;
+                    style)    LABEL="Styling" ;;
+                    chore)    LABEL="Maintenance" ;;
+                  esac
+                  echo "### ${LABEL}"
+                  echo "$COMMITS"
+                  echo ""
+                fi
+              done
+
+              # Uncategorized commits
+              OTHER=$(git log "${PREV_TAG}..${TAG}" --pretty=format:"- %s (%h)" --no-merges | grep -iv "^- \(feat\|fix\|refactor\|perf\|test\|docs\|style\|chore\)" || true)
+              if [ -n "$OTHER" ]; then
+                echo "### Other"
+                echo "$OTHER"
+                echo ""
+              fi
             else
-              echo "## 📋 Initial release"
+              echo "## Initial release"
               echo ""
-              git log --pretty=format:"- %s (%h)" --no-merges | head -20
+              git log --pretty=format:"- %s (%h)" --no-merges | head -30
+              echo ""
             fi
+
             echo ""
+            echo "## Quick Start"
             echo ""
-            echo "## 📁 Assets"
-            echo ""
-            echo "| File | Description |"
-            echo "|------|-------------|"
-            echo "| \`dist-${TAG}.zip\` | Built files (ZIP) |"
-            echo "| \`dist-${TAG}.tar.gz\` | Built files (TAR.GZ) |"
-            echo ""
-            echo "## 🚀 Quick Start"
-            echo ""
-            echo "Скачайте архив, распакуйте и запустите:"
+            echo "Download the archive, extract, and run:"
             echo ""
             echo '```bash'
             echo "# Linux / macOS"
             echo "./scripts/serve.sh"
             echo ""
             echo "# Windows (PowerShell)"
-            echo "./scripts/serve.ps1"
+            echo ".\\scripts\\serve.ps1"
             echo ""
             echo "# Windows (CMD)"
             echo "scripts\\serve.bat"
             echo '```'
             echo ""
-            echo "Скрипт автоматически найдёт bun/npm/python или установит bun."
+            echo "The script auto-detects bun/npm/python or installs bun."
           } > RELEASE_NOTES.md
 
-          cat RELEASE_NOTES.md
-
-      - name: 🚀 Create GitHub Release
+      - name: 🚀 Create Release
         uses: softprops/action-gh-release@v2
         with:
-          name: "Release ${{ github.ref_name }}"
+          name: "AmneziaWG Architect ${{ github.ref_name }}"
           tag_name: ${{ github.ref_name }}
           body_path: RELEASE_NOTES.md
           draft: false
           prerelease: ${{ contains(github.ref_name, '-rc') || contains(github.ref_name, '-beta') || contains(github.ref_name, '-alpha') }}
           generate_release_notes: false
           files: |
-            dist-${{ github.ref_name }}.zip
-            dist-${{ github.ref_name }}.tar.gz
+            amneziawg-architect-${{ github.ref_name }}.zip
+            amneziawg-architect-${{ github.ref_name }}.tar.gz
 
-      - name: ✅ Release summary
+      - name: 📋 Summary
         run: |
-          echo "──────────────────────────────────────"
-          echo "  ✅ GitHub Release created!"
-          echo "  🏷️  Tag : ${{ github.ref_name }}"
-          echo "  📦 Dist : ${{ needs.build.outputs.dist-size }}"
-          echo "──────────────────────────────────────"
-          echo "### 🏷️ GitHub Release \`${{ github.ref_name }}\` created" >> "$GITHUB_STEP_SUMMARY"
+          echo "### 🏷️ Release \`${{ github.ref_name }}\` created" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
           echo "| File | |" >> "$GITHUB_STEP_SUMMARY"
           echo "|------|---|" >> "$GITHUB_STEP_SUMMARY"
-          echo "| dist-${{ github.ref_name }}.zip | ✅ |" >> "$GITHUB_STEP_SUMMARY"
-          echo "| dist-${{ github.ref_name }}.tar.gz | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| amneziawg-architect-${{ github.ref_name }}.zip | ✅ |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| amneziawg-architect-${{ github.ref_name }}.tar.gz | ✅ |" >> "$GITHUB_STEP_SUMMARY"

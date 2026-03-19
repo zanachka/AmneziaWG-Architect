@@ -12,8 +12,7 @@
     "test": "vitest",
     "test:run": "vitest run",
     "test:coverage": "vitest run --coverage",
-    "legacy-build": "node build.js",
-    "legacy-watch": "node build.js --watch"
+    "typecheck": "vue-tsc --noEmit"
   },
   "engines": {
     "node": ">=18.0.0"

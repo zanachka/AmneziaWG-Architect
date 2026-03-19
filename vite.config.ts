@@ -372,5 +372,11 @@ export default defineConfig({
     globals: true,
     environment: "node",
     include: ["src/**/__tests__/**/*.test.ts"],
+    coverage: {
+      provider: "v8",
+      reporter: ["text", "json-summary", "html"],
+      include: ["src/utils/**/*.ts"],
+      exclude: ["src/utils/__tests__/**"],
+    },
   },
 });
