@@ -103,14 +103,26 @@ describe("vite.config.ts URL and CI helpers", () => {
       expect(inferBase()).toBe("/");
     });
 
-    it("uses ./ for github actions", () => {
+    it("uses repo name for github actions", () => {
       process.env.GITHUB_ACTIONS = "true";
-      expect(inferBase()).toBe("./");
+      process.env.GITHUB_REPOSITORY = "owner/my-repo";
+      expect(inferBase()).toBe("/my-repo/");
     });
 
-    it("uses ./ for gitlab ci", () => {
+    it("uses root for github actions without repo", () => {
+      process.env.GITHUB_ACTIONS = "true";
+      expect(inferBase()).toBe("/");
+    });
+
+    it("uses path from CI_PAGES_URL for gitlab ci", () => {
       process.env.GITLAB_CI = "true";
-      expect(inferBase()).toBe("./");
+      process.env.CI_PAGES_URL = "https://user.gitlab.io/my-group/my-project";
+      expect(inferBase()).toBe("/my-group/my-project/");
+    });
+
+    it("uses root for gitlab ci without CI_PAGES_URL", () => {
+      process.env.GITLAB_CI = "true";
+      expect(inferBase()).toBe("/");
     });
 
     it("defaults to ./ for generic", () => {

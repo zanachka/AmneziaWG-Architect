@@ -98,8 +98,26 @@ export function inferBase(): string {
     return "/";
   }
 
-  if (platform === "github" || platform === "gitlab") {
-    return "./";
+  if (platform === "github") {
+    const repo = process.env.GITHUB_REPOSITORY;
+    if (repo) {
+      const [, name] = repo.split("/");
+      if (name) {
+        return `/${name}/`;
+      }
+    }
+    return "/";
+  }
+
+  if (platform === "gitlab") {
+    const pagesUrl = process.env.CI_PAGES_URL;
+    if (pagesUrl) {
+      try {
+        const urlObj = new URL(pagesUrl);
+        return normalizeBase(urlObj.pathname);
+      } catch (e) {}
+    }
+    return "/";
   }
 
   return "./";
@@ -252,7 +270,7 @@ function createSpaFallbackPlugin(): Plugin {
     <meta charset="utf-8" />
     <meta name="robots" content="noindex,nofollow" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Упс... Редирект сам не сработал</title>
+    <title>Маршрутизация — AmneziaWG Architect</title>
     <style>
       :root {
         --bg: #0a0806;
@@ -269,90 +287,131 @@ function createSpaFallbackPlugin(): Plugin {
       html, body {
         margin: 0;
         padding: 0;
-        min-height: 100%;
-        background: radial-gradient(circle at 20% 10%, rgba(232, 168, 64, 0.08), transparent 35%), var(--bg);
+        min-height: 100vh;
+        background: radial-gradient(circle at 50% 0%, rgba(232, 168, 64, 0.08), transparent 50%), var(--bg);
         color: var(--text);
         font-family: "Manrope", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+        display: flex;
+        flex-direction: column;
       }
 
-      body {
-        display: grid;
-        place-items: center;
+      .site-header {
+        padding: 16px 24px;
+        border-bottom: 1px solid rgba(232, 168, 64, 0.1);
+        background: rgba(10, 8, 6, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        text-align: center;
+      }
+
+      .site-header h2 {
+        margin: 0;
+        font-family: "Unbounded", "Manrope", sans-serif;
+        font-size: 18px;
+        color: var(--accent);
+        letter-spacing: 0.5px;
+      }
+
+      .main-content {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
         padding: 24px;
       }
 
       .wrap {
         width: 100%;
-        max-width: 640px;
+        max-width: 540px;
         border: 1px solid var(--border);
-        background: linear-gradient(180deg, rgba(232,168,64,0.08), rgba(232,168,64,0.03));
-        border-radius: 16px;
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
-        padding: 24px;
+        background: linear-gradient(180deg, rgba(232,168,64,0.06), rgba(232,168,64,0.02));
+        border-radius: 20px;
+        box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+        padding: 40px 32px;
+        text-align: center;
       }
 
       h1 {
         margin: 0 0 12px;
         font-family: "Unbounded", "Manrope", sans-serif;
-        font-size: clamp(20px, 3vw, 28px);
-        line-height: 1.2;
+        font-size: clamp(22px, 4vw, 26px);
+        line-height: 1.3;
       }
 
       p {
-        margin: 0 0 16px;
+        margin: 0 0 20px;
         color: var(--muted);
         line-height: 1.6;
       }
 
       .meta {
         font-family: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-        font-size: 12px;
+        font-size: 13px;
         color: #d2be92;
-        opacity: 0.92;
+        opacity: 0.9;
         word-break: break-all;
-        margin: 8px 0 20px;
-        padding: 10px 12px;
-        border-radius: 10px;
-        border: 1px dashed rgba(232,168,64,0.28);
-        background: rgba(0,0,0,0.18);
+        margin: 12px 0 24px;
+        padding: 12px;
+        border-radius: 8px;
+        border: 1px dashed rgba(232,168,64,0.3);
+        background: rgba(0,0,0,0.25);
+        display: inline-block;
       }
 
       .actions {
         display: flex;
         gap: 12px;
         flex-wrap: wrap;
+        justify-content: center;
       }
 
       .btn {
         appearance: none;
         border: 1px solid var(--border);
         border-radius: 12px;
-        padding: 11px 16px;
+        padding: 12px 20px;
+        font-size: 15px;
         font-weight: 700;
         cursor: pointer;
         text-decoration: none;
-        transition: transform .12s ease, box-shadow .12s ease, background .12s ease;
+        transition: all 0.15s ease;
       }
 
       .btn-primary {
         color: #241a0b;
         background: linear-gradient(180deg, var(--accent), var(--accent-2));
         border-color: rgba(255, 220, 140, 0.65);
-        box-shadow: 0 6px 24px rgba(232, 168, 64, 0.25);
+        box-shadow: 0 6px 20px rgba(232, 168, 64, 0.2);
       }
 
       .btn-secondary {
         color: var(--text);
-        background: rgba(232,168,64,0.06);
+        background: rgba(232,168,64,0.08);
       }
 
-      .btn:hover { transform: translateY(-1px); }
+      .btn:hover { transform: translateY(-2px); }
       .btn:active { transform: translateY(0); }
 
       .hint {
-        margin-top: 14px;
+        margin-top: 24px;
         font-size: 13px;
         color: #c7b284;
+        opacity: 0.8;
+      }
+
+      .site-footer {
+        padding: 24px;
+        text-align: center;
+        font-size: 13px;
+        color: var(--muted);
+        border-top: 1px solid rgba(232, 168, 64, 0.08);
+        background: rgba(10, 8, 6, 0.4);
+      }
+
+      @media (max-width: 480px) {
+        .wrap { padding: 28px 20px; }
+        .actions { flex-direction: column; width: 100%; }
+        .btn { width: 100%; }
       }
     </style>
     <script>
@@ -422,45 +481,55 @@ function createSpaFallbackPlugin(): Plugin {
     </style>
 </head>
 <body>
-  <main class="wrap" role="main" aria-live="polite">
-    <!-- UI for failed auto-redirect -->
-    <div class="ui-redirect">
-      <h1>Упс... Редирект сам не сработал!</h1>
-      <p>
-        Мы попытались автоматически открыть SPA-приложение, но браузер или хостинг
-        заблокировал авто-переход. Нажмите кнопку ниже, чтобы перейти к странице вручную.
-      </p>
+  <header class="site-header">
+    <h2>AmneziaWG Architect</h2>
+  </header>
 
-      <div class="meta" id="debugPath">Путь: определяем...</div>
+  <div class="main-content">
+    <main class="wrap" role="main" aria-live="polite">
+      <!-- UI for failed auto-redirect -->
+      <div class="ui-redirect">
+        <h1>Упс... Авто-переход не сработал</h1>
+        <p>
+          Мы попытались загрузить приложение, но ваш браузер заблокировал автоматический редирект.
+          Пожалуйста, нажмите на кнопку ниже.
+        </p>
 
-      <div class="actions">
-        <button class="btn btn-primary" id="goBtn" type="button">
-          Перейти к приложению
-        </button>
-        <a class="btn btn-secondary" id="rootLink" href="/">
-          На главную
-        </a>
+        <div class="meta" id="debugPath">Определяем путь...</div>
+
+        <div class="actions">
+          <button class="btn btn-primary" id="goBtn" type="button">
+            Перейти к странице
+          </button>
+          <a class="btn btn-secondary" id="rootLink" href="/">
+            На главную
+          </a>
+        </div>
+
+        <div class="hint">
+          Если проблема повторяется, обновите страницу с очисткой кэша (Ctrl+F5).
+        </div>
       </div>
 
-      <div class="hint">
-        Если проблема повторяется, обновите страницу с очисткой кэша (Ctrl+F5) или откройте сайт в новом табе.
-      </div>
-    </div>
+      <!-- UI for actual 404 (unknown route) -->
+      <div class="ui-404">
+        <h1>404 — Страница не найдена</h1>
+        <p>
+          Кажется, вы перешли по неверной ссылке или эта страница была удалена.
+        </p>
 
-    <!-- UI for actual 404 (unknown route) -->
-    <div class="ui-404">
-      <h1>Страница не найдена (404)</h1>
-      <p>
-        Кажется, вы перешли по неверной ссылке или страница была удалена.
-      </p>
-
-      <div class="actions">
-        <a class="btn btn-primary" id="rootLink404" href="/">
-          Вернуться на главную
-        </a>
+        <div class="actions">
+          <a class="btn btn-primary" id="rootLink404" href="/">
+            Вернуться на главную
+          </a>
+        </div>
       </div>
-    </div>
-  </main>
+    </main>
+  </div>
+
+  <footer class="site-footer">
+    &copy; ${new Date().getFullYear()} AmneziaWG Architect
+  </footer>
 
   <script>
     (function () {

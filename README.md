@@ -72,7 +72,7 @@
 <td width="50%" valign="top">
 
 ### 🎯 Генератор обфускации
-- **9 профилей мимикрии:** QUIC Initial, QUIC 0-RTT, TLS 1.3, DTLS 1.3, HTTP/3, SIP, Noise_IK
+- **9 профилей мимикрии:** QUIC Initial, QUIC 0-RTT, TLS 1.3, DTLS 1.3, HTTP/3, SIP, Noise_IK и другие.
 - **3 версии AWG:** полная поддержка AWG 1.0, 1.5 и 2.0
 - **Browser Fingerprint:** имитация размера пакетов Chrome, Firefox, Safari, Edge, Яндекс
 - **Feedback-система:** кнопки «Работает / Не работает» — автоматическое усиление параметров
