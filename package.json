@@ -1,21 +1,22 @@
 {
   "name": "amneziawg-architect",
-  "version": "2.1.3",
+  "version": "2.3.0",
   "description": "AmneziaWG Architect — Professional Config Generator",
   "author": "Vadim Khristenko <just@vai-prog.ru>",
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "vue-tsc && vite build",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:run": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "typecheck": "vue-tsc --noEmit"
+    "dev": "bun run vite",
+    "build": "bun run vue-tsc && bun run vite build",
+    "preview": "bun run vite preview",
+    "test": "bun run vitest",
+    "test:run": "bun run vitest run",
+    "test:coverage": "bun run vitest run --coverage",
+    "typecheck": "bun run vue-tsc --noEmit"
   },
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "bun": ">=1.0.0"
   },
   "dependencies": {
     "lucide-vue-next": "^0.577.0",

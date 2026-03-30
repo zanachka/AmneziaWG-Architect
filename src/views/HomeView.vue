@@ -725,6 +725,9 @@ AWG-клиент будет вести себя как обычный WireGuard.
                                 <option value="quic_burst">
                                     QUIC Burst (Multi-packet)
                                 </option>
+                                <option value="dns_query">
+                                    DNS Query (UDP 53)
+                                </option>
                                 <option value="random">
                                     🎲 Случайный выбор
                                 </option>
@@ -993,6 +996,36 @@ AWG-клиент будет вести себя как обычный WireGuard.
                                 <option :value="7">7 — Усиленный</option>
                                 <option :value="10">10 — Максимальный</option>
                             </select>
+                        </div>
+
+                        <!-- Extreme Maximum Mode -->
+                        <div class="field-group">
+                            <label class="field-label">
+                                <Gauge :size="14" class="icon-inline" />
+                                Экстремальные максимумы
+                            </label>
+                            <label class="toggle-check">
+                                <input
+                                    type="checkbox"
+                                    v-model="config.useExtremeMax"
+                                    @change="generate"
+                                />
+                                <span class="toggle-label"
+                                    >Использовать предельные значения параметров</span
+                                >
+                            </label>
+                            <transition name="fade">
+                                <div
+                                    v-if="config.useExtremeMax"
+                                    class="alert alert-warn small-alert"
+                                >
+                                    <TriangleAlert :size="14" />
+                                    <div>
+                                        <b>Extreme mode:</b> Jc до 128, S3 до 256, S4 до 128, H1-H4 разброс 10M.
+                                        Может увеличить оверхед трафика.
+                                    </div>
+                                </div>
+                            </transition>
                         </div>
 
                         <!-- Router Mode -->

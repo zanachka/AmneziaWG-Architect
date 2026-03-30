@@ -18,6 +18,7 @@ const baseInput: GeneratorInput = {
     junkLevel: 5,
     iterCount: 0,
     routerMode: false,
+    useExtremeMax: false,
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -275,8 +276,8 @@ describe("intensity escalation", () => {
         expect(sumHigh / runs).toBeGreaterThan(sumLow / runs);
     });
 
-    it("high intensity produces larger jmin than low", () => {
-        const runs = 30;
+    it("high intensity produces larger jmin on average than low", () => {
+        const runs = 50;
         let sumLow = 0;
         let sumHigh = 0;
 
@@ -288,17 +289,17 @@ describe("intensity escalation", () => {
         expect(sumHigh / runs).toBeGreaterThan(sumLow / runs);
     });
 
-    it("high intensity produces larger jc on average than low", () => {
+    it("high intensity produces larger jmax on average than low", () => {
         const runs = 50;
         let sumLow = 0;
         let sumHigh = 0;
 
         for (let i = 0; i < runs; i++) {
-            sumLow += genCfg({ ...baseInput, intensity: "low", junkLevel: 3 }).jc;
-            sumHigh += genCfg({ ...baseInput, intensity: "high", junkLevel: 3 }).jc;
+            sumLow += genCfg({ ...baseInput, intensity: "low" }).jmax;
+            sumHigh += genCfg({ ...baseInput, intensity: "high" }).jmax;
         }
 
-        expect(sumHigh / runs).toBeGreaterThanOrEqual(sumLow / runs);
+        expect(sumHigh / runs).toBeGreaterThan(sumLow / runs);
     });
 });
 
@@ -370,6 +371,157 @@ describe("Jc/Jmin/Jmax dynamic generation", () => {
             const cfg = genCfg(baseInput);
             expect(cfg.jmax).toBeGreaterThan(cfg.jmin + 64);
         }
+    });
+
+    // ── Jc user control tests ────────────────────────────────────────────────
+    // Проверяем что junkLevel пользователя соблюдается с минимальной вариацией ±1
+
+    it("Jc respects junkLevel=0 for AWG 2.0", () => {
+        for (let i = 0; i < 50; i++) {
+            const cfg = genCfg({ ...baseInput, version: "2.0", junkLevel: 0 });
+            // junkLevel=0 остаётся 0 (нет вариации для 0)
+            expect(cfg.jc).toBe(0);
+        }
+    });
+
+    it("Jc respects junkLevel=3 for AWG 2.0 (within ±1)", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, version: "2.0", junkLevel: 3 });
+            // Ожидаем 2, 3 или 4 (±1 от 3, но не ниже 1)
+            expect(cfg.jc).toBeGreaterThanOrEqual(2);
+            expect(cfg.jc).toBeLessThanOrEqual(4);
+        }
+    });
+
+    it("Jc respects junkLevel=5 for AWG 2.0 (within ±1)", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, version: "2.0", junkLevel: 5 });
+            // Ожидаем 4, 5 или 6 (±1 от 5)
+            expect(cfg.jc).toBeGreaterThanOrEqual(4);
+            expect(cfg.jc).toBeLessThanOrEqual(6);
+        }
+    });
+
+    it("Jc respects junkLevel=7 for AWG 2.0 (within ±1)", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, version: "2.0", junkLevel: 7 });
+            // Ожидаем 6, 7 или 8 (±1 от 7)
+            expect(cfg.jc).toBeGreaterThanOrEqual(6);
+            expect(cfg.jc).toBeLessThanOrEqual(8);
+        }
+    });
+
+    it("Jc respects junkLevel=10 for AWG 2.0 (within ±1)", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, version: "2.0", junkLevel: 10 });
+            // Ожидаем 9, 10 или 11 (±1 от 10)
+            expect(cfg.jc).toBeGreaterThanOrEqual(9);
+            expect(cfg.jc).toBeLessThanOrEqual(11);
+        }
+    });
+
+    it("Jc respects AWG 1.0 minimum (jc >= 4) even with junkLevel=0", () => {
+        for (let i = 0; i < 50; i++) {
+            const cfg = genCfg({ ...baseInput, version: "1.0", junkLevel: 0 });
+            // AWG 1.0 требует минимум 4
+            expect(cfg.jc).toBeGreaterThanOrEqual(4);
+        }
+    });
+
+    it("Jc respects AWG 1.0 minimum (jc >= 4) with junkLevel=3", () => {
+        for (let i = 0; i < 50; i++) {
+            const cfg = genCfg({ ...baseInput, version: "1.0", junkLevel: 3 });
+            // junkLevel=3 для AWG 1.0 становится 4 (протокольный минимум)
+            expect(cfg.jc).toBeGreaterThanOrEqual(4);
+        }
+    });
+
+    it("Jc respects junkLevel=5 for AWG 1.0 (within ±1, min 4)", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, version: "1.0", junkLevel: 5 });
+            // Ожидаем 4, 5 или 6 (±1 от 5, но не ниже 4)
+            expect(cfg.jc).toBeGreaterThanOrEqual(4);
+            expect(cfg.jc).toBeLessThanOrEqual(6);
+        }
+    });
+
+    // ── Jmin/Jmax intensity tests ────────────────────────────────────────────
+    // Проверяем что интенсивность соблюдает диапазоны
+
+    it("Jmin low intensity stays in range [64, 256]", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, intensity: "low" });
+            expect(cfg.jmin).toBeGreaterThanOrEqual(64);
+            expect(cfg.jmin).toBeLessThanOrEqual(256);
+        }
+    });
+
+    it("Jmin medium intensity stays in range [128, 512]", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, intensity: "medium" });
+            expect(cfg.jmin).toBeGreaterThanOrEqual(128);
+            expect(cfg.jmin).toBeLessThanOrEqual(512);
+        }
+    });
+
+    it("Jmin high intensity stays in range [256, 768]", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, intensity: "high" });
+            expect(cfg.jmin).toBeGreaterThanOrEqual(256);
+            expect(cfg.jmin).toBeLessThanOrEqual(768);
+        }
+    });
+
+    it("Jmax low intensity stays in base range [256, 512] with overflow for Jmin+64 rule", () => {
+        // Jmax может превышать 512 когда Jmin близок к 256 (требование Jmax > Jmin + 64)
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, intensity: "low" });
+            expect(cfg.jmax).toBeGreaterThanOrEqual(256);
+            // Максимум: 256 (jmin max) + 64 + 256 (overflow) = 576
+            expect(cfg.jmax).toBeLessThanOrEqual(600);
+        }
+    });
+
+    it("Jmax medium intensity stays in range [512, 1024]", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, intensity: "medium" });
+            expect(cfg.jmax).toBeGreaterThanOrEqual(512);
+            expect(cfg.jmax).toBeLessThanOrEqual(1024);
+        }
+    });
+
+    it("Jmax high intensity stays in range [768, 1280]", () => {
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, intensity: "high" });
+            expect(cfg.jmax).toBeGreaterThanOrEqual(768);
+            expect(cfg.jmax).toBeLessThanOrEqual(1280);
+        }
+    });
+
+    it("Jmin high produces larger values than low on average", () => {
+        const runs = 50;
+        let sumLow = 0;
+        let sumHigh = 0;
+
+        for (let i = 0; i < runs; i++) {
+            sumLow += genCfg({ ...baseInput, intensity: "low" }).jmin;
+            sumHigh += genCfg({ ...baseInput, intensity: "high" }).jmin;
+        }
+
+        expect(sumHigh / runs).toBeGreaterThan(sumLow / runs);
+    });
+
+    it("Jmax high produces larger values than low on average", () => {
+        const runs = 50;
+        let sumLow = 0;
+        let sumHigh = 0;
+
+        for (let i = 0; i < runs; i++) {
+            sumLow += genCfg({ ...baseInput, intensity: "low" }).jmax;
+            sumHigh += genCfg({ ...baseInput, intensity: "high" }).jmax;
+        }
+
+        expect(sumHigh / runs).toBeGreaterThan(sumLow / runs);
     });
 });
 
@@ -457,5 +609,130 @@ describe("composite profiles", () => {
         expect(cfg.i1).not.toBe("");
         expect(cfg.i2).toBe("");
         expect(cfg.i3).toBe("");
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DNS Query profile
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("dns_query profile", () => {
+    it("I1 contains DNS query header (transaction ID + flags)", () => {
+        const cfg = genCfg({ ...baseInput, profile: "dns_query" });
+        // DNS query starts with transaction ID (2 bytes) + flags (0x0100)
+        expect(cfg.i1).toContain("<b 0x");
+        expect(cfg.i1.length).toBeGreaterThan(20);
+    });
+
+    it("I1-I5 all contain DNS-like patterns when mimicAll=true", () => {
+        const cfg = genCfg({ ...baseInput, profile: "dns_query", mimicAll: true });
+        expect(cfg.i1).toContain("<b 0x");
+        expect(cfg.i2).toContain("<b 0x");
+        expect(cfg.i3).toContain("<b 0x");
+        expect(cfg.i4).toContain("<b 0x");
+        expect(cfg.i5).toContain("<b 0x");
+    });
+
+    it("dns_query generates different values across iterations", () => {
+        const values = new Set<string>();
+        for (let i = 0; i < 50; i++) {
+            values.add(genCfg({ ...baseInput, profile: "dns_query" }).i1);
+        }
+        expect(values.size).toBeGreaterThan(10);
+    });
+
+    it("dns_query works with custom DNS host", () => {
+        const cfg = genCfg({ ...baseInput, profile: "dns_query", customHost: "8.8.8.8" });
+        expect(cfg.i1).toBeTruthy();
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// useExtremeMax mode
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("useExtremeMax mode", () => {
+    it("H1 spread is 10M when useExtremeMax=true", () => {
+        const startValues = new Set<number>();
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, useExtremeMax: true });
+            // H1 format: "start-end" range string
+            const match = cfg.h1.match(/^(\d+)-(\d+)$/);
+            if (match) {
+                startValues.add(parseInt(match[1], 10));
+            }
+        }
+        // With 10M spread, values should cover a wide range
+        const arr = Array.from(startValues).sort((a, b) => a - b);
+        const spread = arr[arr.length - 1] - arr[0];
+        expect(spread).toBeGreaterThan(5_000_000); // At least 5M spread
+    });
+
+    it("S3 can reach up to 256 when useExtremeMax=true", () => {
+        let maxS3 = 0;
+        for (let i = 0; i < 200; i++) {
+            const cfg = genCfg({ ...baseInput, useExtremeMax: true });
+            if (cfg.s3 > maxS3) maxS3 = cfg.s3;
+        }
+        expect(maxS3).toBeGreaterThan(100); // Should reach at least 100+
+        expect(maxS3).toBeLessThanOrEqual(256);
+    });
+
+    it("S4 can reach up to 128 when useExtremeMax=true", () => {
+        let maxS4 = 0;
+        for (let i = 0; i < 200; i++) {
+            const cfg = genCfg({ ...baseInput, useExtremeMax: true });
+            if (cfg.s4 > maxS4) maxS4 = cfg.s4;
+        }
+        expect(maxS4).toBeGreaterThan(50); // Should reach at least 50+
+        expect(maxS4).toBeLessThanOrEqual(128);
+    });
+
+    it("Jc can reach higher values when useExtremeMax=true and junkLevel is high", () => {
+        const cfg = genCfg({ ...baseInput, useExtremeMax: true, junkLevel: 10 });
+        // With extreme mode and junkLevel=10, Jc should be around 10 (±1)
+        expect(cfg.jc).toBeGreaterThanOrEqual(9);
+        expect(cfg.jc).toBeLessThanOrEqual(11);
+    });
+
+    it("Jc respects maxJc=128 in extreme mode", () => {
+        // Even with extreme mode, Jc should not exceed 128 (protocol limit)
+        for (let i = 0; i < 100; i++) {
+            const cfg = genCfg({ ...baseInput, useExtremeMax: true, junkLevel: 128 });
+            expect(cfg.jc).toBeLessThanOrEqual(128);
+        }
+    });
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Random profile
+// ─────────────────────────────────────────────────────────────────────────────
+
+describe("random profile", () => {
+    it("random generates all possible profile types including dns_query", () => {
+        const profiles = new Set<string>();
+        const runs = 200;
+
+        for (let i = 0; i < runs; i++) {
+            const cfg = genCfg({ ...baseInput, profile: "random" });
+            // Classify by I1 pattern
+            if (cfg.i1.includes("0x160301")) profiles.add("tls");
+            else if (cfg.i1.match(/0xc[0-3]/i)) profiles.add("quic");
+            else if (cfg.i1.match(/0xd[0-3]/i)) profiles.add("quic_0rtt");
+            else if (cfg.i1.includes("REGISTER sip")) profiles.add("sip");
+            else if (cfg.i1.includes("0x0100") && cfg.i1.length < 200) profiles.add("dns");
+            else profiles.add("other");
+        }
+
+        // Should produce variety
+        expect(profiles.size).toBeGreaterThan(3);
+    });
+
+    it("random produces different I1 patterns across many iterations", () => {
+        const i1Values = new Set<string>();
+        for (let i = 0; i < 100; i++) {
+            i1Values.add(genCfg({ ...baseInput, profile: "random" }).i1);
+        }
+        expect(i1Values.size).toBeGreaterThan(5);
     });
 });

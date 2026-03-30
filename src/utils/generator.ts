@@ -28,6 +28,7 @@ export type MimicProfile =
   | "sip"
   | "tls_to_quic"
   | "quic_burst"
+  | "dns_query"
   | "random";
 
 export type BrowserProfile =
@@ -65,6 +66,9 @@ export interface GeneratorInput {
 
   /** Режим роутера: минимальные шумы для слабых устройств (NanoPi, Keenetic, OpenWrt) */
   routerMode: boolean;
+
+  /** Использовать экстремальные максимумы для параметров near ceiling */
+  useExtremeMax: boolean;
 }
 
 /** Итоговая конфигурация AWG */
@@ -123,6 +127,7 @@ export const PROFILE_LABELS: Record<MimicProfile, string> = {
   sip: "SIP",
   tls_to_quic: "TLS → QUIC",
   quic_burst: "QUIC Burst",
+  dns_query: "DNS Query",
   random: "Random",
 };
 
@@ -900,6 +905,223 @@ export const hostPools: Record<string, string[]> = {
     "sip.aircall.io",
     "sip.3cx.com",
   ],
+  dns: [
+    // ========== 🇷🇺 РОССИЙСКИЕ DNS ==========
+
+    // Yandex.DNS (Базовый — без фильтрации)
+    "77.88.8.8",
+    "77.88.8.1",
+
+    // Yandex.DNS (Безопасный — блокировка вредоносных сайтов)
+    "77.88.8.88",
+    "77.88.8.2",
+
+    // Yandex.DNS (Семейный — блокировка взрослого контента)
+    "77.88.8.7",
+    "77.88.8.3",
+
+    // MSK-IX DNS (Москва / Санкт-Петербург, anycast)
+    "62.76.76.62",
+    "62.76.62.76",
+
+    // SafeDNS (Россия/глобальный anycast)
+    "195.46.39.39",
+    "195.46.39.40",
+
+    // SkyDNS (Российский провайдер контент-фильтрации)
+    // pub.DNS24.online
+    "138.124.81.6",
+    "77.91.68.8",
+
+    // Comss.one DNS (Россия, блокировка рекламы и вредоносных сайтов)
+    "92.223.109.31",
+    "185.64.91.189",
+
+    // ========== 🌍 МЕЖДУНАРОДНЫЕ DNS (доступны из РФ) ==========
+
+    // Google Public DNS
+    "8.8.8.8",
+    "8.8.4.4",
+
+    // Cloudflare DNS (основной)
+    "1.1.1.1",
+    "1.0.0.1",
+
+    // Cloudflare for Families (блокировка вредоносных сайтов)
+    "1.1.1.2",
+    "1.0.0.2",
+
+    // Cloudflare for Families (блокировка вредоносных + взрослых сайтов)
+    "1.1.1.3",
+    "1.0.0.3",
+
+    // Quad9 (безопасный, с блокировкой угроз)
+    "9.9.9.9",
+    "149.112.112.112",
+
+    // Quad9 (без фильтрации)
+    "9.9.9.10",
+    "149.112.112.10",
+
+    // OpenDNS (Cisco)
+    "208.67.222.222",
+    "208.67.220.220",
+
+    // OpenDNS Family Shield
+    "208.67.222.123",
+    "208.67.220.123",
+
+    // AdGuard DNS (блокировка рекламы и трекеров)
+    "94.140.14.14",
+    "94.140.15.15",
+
+    // AdGuard DNS (без фильтрации)
+    "94.140.14.140",
+    "94.140.14.141",
+
+    // AdGuard DNS Family (реклама + взрослый контент)
+    "94.140.14.15",
+    "94.140.15.16",
+
+    // Comodo SecureDNS
+    "8.26.56.26",
+    "8.20.247.20",
+
+    // CleanBrowsing (Security Filter)
+    "185.228.168.9",
+    "185.228.169.9",
+
+    // CleanBrowsing (Adult Filter)
+    "185.228.168.10",
+    "185.228.169.11",
+
+    // CleanBrowsing (Family Filter)
+    "185.228.168.168",
+    "185.228.169.168",
+
+    // Verisign Public DNS
+    "64.6.64.6",
+    "64.6.65.6",
+
+    // Neustar DNS Advantage
+    "156.154.70.1",
+    "156.154.71.1",
+
+    // Level3 Communications
+    "4.2.2.1",
+    "4.2.2.2",
+    "4.2.2.3",
+    "4.2.2.4",
+    "4.2.2.5",
+    "4.2.2.6",
+
+    // Norton ConnectSafe (Security)
+    "199.85.126.10",
+    "199.85.127.10",
+
+    // Alternate DNS (блокировка рекламы)
+    "76.76.19.19",
+    "76.223.122.150",
+
+    // SmartViper Public DNS
+    "208.76.50.50",
+    "208.76.51.51",
+
+    // FoolDNS (защита от рекламы и вредоносных сайтов)
+    "87.118.111.215",
+    "213.187.11.62",
+
+    // GreenTeamDNS
+    "81.218.119.11",
+    "209.88.198.133",
+
+    // DNS.WATCH (без логирования)
+    "84.200.69.80",
+    "84.200.70.40",
+
+    // Hurricane Electric Public DNS
+    "74.82.42.42",
+
+    // Dyn DNS
+    "216.146.35.35",
+    "216.146.36.36",
+
+    // ClearCloud DNS
+    "74.118.212.1",
+    "74.118.212.2",
+
+    // Ali DNS (Alibaba, Китай)
+    "223.5.5.5",
+    "223.6.6.6",
+
+    // DNSPod / Tencent (Китай)
+    "119.29.29.29",
+    "182.254.116.116",
+
+    // 114DNS (Китай)
+    "114.114.114.114",
+    "114.114.115.115",
+
+    // Quad101 (TWNIC, Тайвань)
+    "101.101.101.101",
+    "101.102.103.104",
+
+    // CFIEC Public DNS (IPv6-ориентированный, Китай)
+    "240C::6666",
+    "240C::6644",
+
+    // IIJ.JP DNS (Япония)
+    "103.2.57.5",
+    "103.2.57.6",
+
+    // 360 Secure DNS (Китай)
+    "101.226.4.6",
+    "218.30.118.6",
+
+    // CZ.NIC ODVR (Чехия, DNSSEC)
+    "193.17.47.1",
+    "185.43.135.1",
+
+    // SWITCH DNS (Швейцария)
+    "130.59.31.248",
+    "130.59.31.251",
+
+    // Digitale Gesellschaft DNS (Швейцария)
+    "185.95.218.42",
+    "185.95.218.43",
+
+    // Fondation Restena DNS (Люксембург)
+    "158.64.1.29",
+
+    // CIRA Shield DNS (Канада)
+    "149.112.121.10",
+    "149.112.122.10",
+
+    // Mullvad DNS (без фильтрации)
+    "194.242.2.2",
+    "194.242.2.3",
+
+    // Nawala Child Protection DNS (Индонезия)
+    "180.131.144.144",
+    "180.131.145.145",
+
+    // OpenNIC (децентрализованный)
+    "69.164.208.50",
+    "216.87.84.211",
+
+    // VRx Network Services
+    "199.166.31.3",
+
+    // GTE
+    "192.76.85.133",
+    "206.124.64.1",
+
+    // One Connect IP
+    "67.138.54.100",
+
+    // Exetel (Австралия)
+    "220.233.167.31",
+  ],
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1128,7 +1350,8 @@ export function alignTo128(n: number): number {
 
 function getHost(input: GeneratorInput, poolKey: string): string {
   if (input.customHost.trim()) return input.customHost.trim();
-  const pool = hostPools[poolKey] ?? hostPools.tls_client_hello;
+  const actualKey = poolKey === "dns_query" ? "dns" : poolKey;
+  const pool = hostPools[actualKey] ?? hostPools.tls_client_hello;
   return pool[rnd(0, pool.length - 1)];
 }
 
@@ -1487,6 +1710,76 @@ function mkSIP(input: GeneratorInput, iv: number): string {
 }
 
 /**
+ * mkDNS — генерирует пакет мимикрии под DNS запрос (UDP port 53).
+ *
+ * Формат DNS query:
+ *   - Transaction ID: 2 bytes
+ *   - Flags: 2 bytes (0x0100 = standard query, recursion desired)
+ *   - Questions: 2 bytes (1)
+ *   - Answer RRs: 2 bytes (0)
+ *   - Authority RRs: 2 bytes (0)
+ *   - Additional RRs: 2 bytes (0)
+ *   - Query Name: variable (label-length encoded host)
+ *   - Query Type: 2 bytes (0x0001 = A record, or 0x001c = AAAA)
+ *   - Query Class: 2 bytes (0x0001 = IN)
+ *
+ * BFP не применяется — используем реальный формат DNS.
+ */
+function mkDNS(input: GeneratorInput, iv: number): string {
+  const host = getHost(input, "dns_query");
+
+  // Кодируем домен в DNS label format: length-prefixed labels
+  let queryNameHex = "";
+  const labels = host.split(".");
+  for (const label of labels) {
+    const lenHex = label.length.toString(16).padStart(2, "0");
+    const labelHex = Array.from(label)
+      .map((c) => c.charCodeAt(0).toString(16).padStart(2, "0"))
+      .join("");
+    queryNameHex += lenHex + labelHex;
+  }
+  queryNameHex += "00"; // null terminator
+
+  // DNS header: random transaction ID + standard query flags
+  const txid = rh(2); // 2 bytes random
+  const flags = "0100"; // Standard query, recursion desired
+  const qdcount = "0001"; // 1 question
+  const ancount = "0000"; // 0 answers
+  const nscount = "0000"; // 0 authority
+  const arcount = "0000"; // 0 additional
+
+  // Query type: A (0001) or AAAA (001c) based on iv
+  const qtype = iv % 2 === 0 ? "0001" : "001c";
+  const qclass = "0001"; // IN class
+
+  const dnsQueryHex =
+    txid +
+    flags +
+    qdcount +
+    ancount +
+    nscount +
+    arcount +
+    queryNameHex +
+    qtype +
+    qclass;
+
+  const hex = assertEvenHex(dnsQueryHex, "mkDNS");
+
+  // Padding to match DNS response sizes (64-512 bytes typical)
+  const mtu = input.mtu;
+  const headerB = hex.length / 2;
+  const targetSize = rnd(64, Math.min(512, mtu - 20));
+  const rLen = Math.max(0, targetSize - headerB);
+
+  return (
+    `<b 0x${hex}>` +
+    (input.useTagR && rLen > 0 ? splitPad(Math.min(rLen, 200)) : "") +
+    (input.useTagT ? "<t>" : "") +
+    (input.useTagC ? "<c>" : "")
+  );
+}
+
+/**
  * mkEntropy(idx, iv) — генерирует энтропийные пакеты I2–I5.
  *
  * Создаёт разнообразную смесь тегов для обхода статистического анализа DPI.
@@ -1528,7 +1821,8 @@ function mkEntropy(input: GeneratorInput, idx: number, iv: number): string {
     c + b + b2 + t + rc + r + rd,
   ];
 
-  const result = patterns[(idx + rnd(0, patterns.length - 1)) % patterns.length];
+  const result =
+    patterns[(idx + rnd(0, patterns.length - 1)) % patterns.length];
   return result || "<r 10>";
 }
 
@@ -1553,8 +1847,9 @@ export function genI1(
     dtls: mkDTLS,
     http3: mkHTTP3,
     sip: mkSIP,
-    tls_to_quic: mkTLS,     // I1 = TLS, I2 = QUIC (задаётся в genCfg)
-    quic_burst: mkQUICi,    // I1 = QUIC Initial, I2-I3 задаются в genCfg
+    dns_query: mkDNS,
+    tls_to_quic: mkTLS, // I1 = TLS, I2 = QUIC (задаётся в genCfg)
+    quic_burst: mkQUICi, // I1 = QUIC Initial, I2-I3 задаются в genCfg
   };
 
   if (profile === "random") {
@@ -1581,7 +1876,8 @@ export function genI1(
  *   Jmax > 81 при AWG 1.0 (требование официального клиента)
  */
 export function genCfg(input: GeneratorInput): AWGConfig {
-  const { version, intensity, profile, iterCount, junkLevel } = input;
+  const { version, intensity, profile, iterCount, junkLevel, useExtremeMax } =
+    input;
 
   const imap: Record<Intensity, number> = { low: 1, medium: 2, high: 3 };
   const boost = iterCount * 5;
@@ -1591,29 +1887,37 @@ export function genCfg(input: GeneratorInput): AWGConfig {
   // Диапазоны H1–H4 НЕ должны пересекаться. Базы подобраны с запасом.
   // Это гарантирует уникальность заголовков и невозможность создать универсальное DPI-правило.
   //
-  // Обновлённые диапазоны (Q1 2026) — шире и динамичнее:
-  //   H1: 100M - 1.1B  (Init Packet)
-  //   H2: 1.2B - 2.3B  (Response Packet)
-  //   H3: 2.4B - 3.5B  (Cookie Reply Packet)
-  //   H4: 3.6B - 4.29B (Data Packet, максимум uint32)
-  const h1 = rRange(rnd(100_000_000, 900_000_000), 100_000_000);
-  const h2 = rRange(rnd(1_200_000_000, 2_000_000_000), 100_000_000);
-  const h3 = rRange(rnd(2_400_000_000, 3_200_000_000), 100_000_000);
-  const h4 = rRange(rnd(3_600_000_000, 4_000_000_000), 150_000_000);
+  // Обновлённые диапазоны (Q1 2026) — разброс 10 миллионов для уникальности:
+  //   H1: 100M - 900M + 10M spread  (Init Packet)
+  //   H2: 1.2B - 2.0B + 10M spread  (Response Packet)
+  //   H3: 2.4B - 3.2B + 10M spread  (Cookie Reply Packet)
+  //   H4: 3.6B - 4.0B + 15M spread  (Data Packet, максимум uint32)
+  const h1Spread = useExtremeMax ? 10_000_000 : 100_000_000;
+  const h2Spread = useExtremeMax ? 10_000_000 : 100_000_000;
+  const h3Spread = useExtremeMax ? 10_000_000 : 100_000_000;
+  const h4Spread = useExtremeMax ? 15_000_000 : 150_000_000;
+
+  const h1 = rRange(rnd(100_000_000, 900_000_000), h1Spread);
+  const h2 = rRange(rnd(1_200_000_000, 2_000_000_000), h2Spread);
+  const h3 = rRange(rnd(2_400_000_000, 3_200_000_000), h3Spread);
+  const h4 = rRange(rnd(3_600_000_000, 4_000_000_000), h4Spread);
 
   // ── H1s–H4s: одиночные значения для AWG 1.x ──────────────────────────────
-  const h1s = 100_000_000 + rnd(0, 4_000_000);
-  const h2s = 1_200_000_000 + rnd(0, 4_000_000);
-  const h3s = 2_400_000_000 + rnd(0, 4_000_000);
-  const h4s = 3_600_000_000 + rnd(0, 4_000_000);
+  const h1sSpread = useExtremeMax ? 10_000_000 : 4_000_000;
+  const h1s = 100_000_000 + rnd(0, h1sSpread);
+  const h2s = 1_200_000_000 + rnd(0, h2Spread);
+  const h3s = 2_400_000_000 + rnd(0, h3Spread);
+  const h4s = 3_600_000_000 + rnd(0, h4Spread);
 
   // ── S1–S4: рандомизация длин пакетов ──────────────────────────────────────
   // Длина пакетов в классическом WireGuard фиксирована — DPI легко их идентифицирует.
   // AmneziaWG добавляет случайный префикс 0..S1 байт к каждому типу пакета.
   //
-  // Обновлённые диапазоны (Q1 2026) — лучше официального клиента:
-  //   Официал: S1-S2: 15-150, S3: 1-64, S4: 1-20
-  //   Наш вариант: S1-S2: 1-150 (шире), S3: 1-64, S4: 1-32
+  // Обновлённые диапазоны (Q1 2026) — с учётом лимитов ядра AmneziaWG:
+  //   S1: 1-150 (Handshake Initiation Padding)
+  //   S2: 1-150 (Handshake Response Padding)
+  //   S3: 1-1132 (Cookie Reply Padding, лимит MTU 1280 - 148)
+  //   S4: 1-128 (Transport Data Padding, рекомендовано 0-32)
   //
   // Важно: S1-S4 должны быть >= 1, иначе сервер считает что параметр отключён.
   //
@@ -1630,28 +1934,58 @@ export function genCfg(input: GeneratorInput): AWGConfig {
   }
 
   // Гарантируем S1 + 56 ≠ S3 и S2 + 92 ≠ S3
-  let s3 = rnd(1, 64); // Cookie Reply
+  let s3 = rnd(1, 64); // Cookie Reply: базовый режим
   let s3Attempts = 0;
   while ((s3 === s1 + 56 || s3 === s2 + 92) && s3Attempts < 10) {
     s3 = rnd(1, 64);
     s3Attempts++;
   }
 
-  const s4 = rnd(1, 32); // Data: 1-32 (жёсткий лимит протокола)
+  let s4 = rnd(1, 32); // Data: 1-32 (рекомендованный лимит)
+
+  // S3/S4 extreme mode: расширяем диапазоны при включённой опции
+  if (useExtremeMax) {
+    s3 = rnd(65, 256); // Расширенный S3
+    s4 = rnd(33, 128); // Расширенный S4 (максимум по протоколу)
+    // Повторяем проверку уникальности для расширенных значений
+    s3Attempts = 0;
+    while ((s3 === s1 + 56 || s3 === s2 + 92) && s3Attempts < 10) {
+      s3 = rnd(65, 256);
+      s3Attempts++;
+    }
+  }
 
   // ── Junk Train ────────────────────────────────────────────────────────────
   // Серия Jc случайных UDP-пакетов перед хендшейком.
   // Размывает временной и размерный профиль старта сессии.
   // Для AWG 1.0: Jc ≥ 4 и Jmax > 81 — требования официального клиента.
   //
+  // Лимиты AmneziaWG kernel module:
+  //   Jc: 0-128 (максимум протокола), рекомендовано 4-12
+  //   Jmin: 0-1280 (лимит MTU)
+  //   Jmax: 0-1280 (лимит MTU)
+  //
   // Динамичная генерация с широкими диапазонами для уникальности каждой конфигурации.
   const minJc = version === "1.0" ? 4 : 3;
+  const maxJc = useExtremeMax ? 128 : 15;
 
-  // Jc: базовое значение от junkLevel + рандомизация
-  const jcBase = Math.max(minJc, junkLevel);
-  const jcRandom = rnd(0, intensity === "high" ? 6 : intensity === "medium" ? 4 : 2);
-  let jcv = Math.min(15, jcBase + jcRandom);
-  if (version === "1.0") jcv = Math.max(4, jcv);
+  // Jc: используем junkLevel как основу с минимальной вариацией ±1 для естественности
+  // Для AWG 1.0: гарантируем минимум 4 (требование протокола)
+  let jcv = junkLevel;
+  if (version === "1.0") {
+    jcv = Math.max(4, jcv);
+  } else {
+    // Для AWG 2.0: минимальная вариация ±1 от пользовательского значения
+    if (jcv > 0) {
+      const variance = rnd(-1, 1);
+      jcv = Math.max(1, Math.min(maxJc, jcv + variance));
+    }
+  }
+
+  // Extreme mode: если junkLevel=0 но включён extreme, даём небольшой диапазон
+  if (useExtremeMax && junkLevel === 0 && version !== "1.0") {
+    jcv = rnd(1, 8);
+  }
 
   // Jmin: широкие диапазоны в зависимости от интенсивности
   const jminRanges: Record<Intensity, [number, number]> = {
@@ -1697,8 +2031,13 @@ export function genCfg(input: GeneratorInput): AWGConfig {
   // Не генерируем I1–I5 для AWG 1.0 — там эти параметры не поддерживаются.
   const hasCPS = version !== "1.0";
   const isComposite = profile === "tls_to_quic" || profile === "quic_burst";
+  const isDns = profile === "dns_query";
 
-  let i1 = "", i2 = "", i3 = "", i4 = "", i5 = "";
+  let i1 = "",
+    i2 = "",
+    i3 = "",
+    i4 = "",
+    i5 = "";
 
   if (!hasCPS) {
     // AWG 1.0 — без CPS
@@ -1716,6 +2055,13 @@ export function genCfg(input: GeneratorInput): AWGConfig {
     i3 = mkHTTP3(input, iv);
     i4 = mkEntropy(input, 3, iv);
     i5 = mkEntropy(input, 4, iv);
+  } else if (isDns) {
+    // DNS Query мимикрия: I1 = DNS запрос, I2-I5 = дополнительные DNS или энтропия
+    i1 = mkDNS(input, iv);
+    i2 = input.mimicAll ? mkDNS(input, iv + 1) : mkEntropy(input, 1, iv);
+    i3 = input.mimicAll ? mkDNS(input, iv + 2) : mkEntropy(input, 2, iv);
+    i4 = input.mimicAll ? mkDNS(input, iv + 3) : mkEntropy(input, 3, iv);
+    i5 = input.mimicAll ? mkDNS(input, iv + 4) : mkEntropy(input, 4, iv);
   } else {
     // Стандартная логика
     i1 = genI1(input, profile, iv);
@@ -1727,7 +2073,10 @@ export function genCfg(input: GeneratorInput): AWGConfig {
 
   // Router mode: отключить I2–I5 для снижения нагрузки
   if (input.routerMode && hasCPS) {
-    i2 = ""; i3 = ""; i4 = ""; i5 = "";
+    i2 = "";
+    i3 = "";
+    i4 = "";
+    i5 = "";
   }
 
   return {

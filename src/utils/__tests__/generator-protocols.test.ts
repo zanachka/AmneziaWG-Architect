@@ -18,6 +18,7 @@ const baseInput: GeneratorInput = {
     junkLevel: 5,
     iterCount: 0,
     routerMode: false,
+    useExtremeMax: false,
 };
 
 const profiles: MimicProfile[] = [

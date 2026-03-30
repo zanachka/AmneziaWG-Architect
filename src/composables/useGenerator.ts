@@ -72,6 +72,9 @@ export function useGenerator() {
 
     // Режим роутера (минимальные шумы для слабых устройств)
     routerMode: false,
+
+    // Экстремальные максимумы (Jc до 128, S3/S4 расширенные, H разброс 10M)
+    useExtremeMax: false,
   });
 
   // ── Состояние UI ──────────────────────────────────────────────────────────
@@ -119,6 +122,7 @@ export function useGenerator() {
       junkLevel: config.junkLevel,
       iterCount: iterCount.value,
       routerMode: config.routerMode,
+      useExtremeMax: config.useExtremeMax,
     });
 
     const label = PROFILE_LABELS[config.profile] ?? config.profile;
@@ -436,6 +440,7 @@ export function useGenerator() {
     wireguard_noise: "WireGuard Noise_IK — хост не используется",
     tls_to_quic: "TLS+QUIC: vk.com, yandex.ru, ozon.ru …",
     quic_burst: "QUIC-burst: fastly.net, cdn-apple.com, yastatic.net …",
+    dns_query: "DNS-сервер: 8.8.8.8, 1.1.1.1, 77.88.8.8 (или оставьте пустым для пула)",
     random:
       "Пул выбирается по случайному профилю (опционально укажите свой хост)",
   };
@@ -451,6 +456,7 @@ export function useGenerator() {
     wireguard_noise: "Хост не используется для этого профиля",
     tls_to_quic: "TLS→QUIC хост (напр., vk.com)",
     quic_burst: "QUIC-хост (напр., fastly.net)",
+    dns_query: "DNS-сервер (напр., 8.8.8.8) или домен",
     random: "Свой домен (опционально)",
   };
 
