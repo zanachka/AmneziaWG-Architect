@@ -99,6 +99,16 @@ export function inferBase(): string {
   }
 
   if (platform === "github") {
+    // Для кастомных доменов (architect.vai-rice.space) используем корень
+    // Проверка через VITE_USE_CUSTOM_DOMAIN или наличие CNAME файла
+    const useCustomDomain = process.env.VITE_USE_CUSTOM_DOMAIN === "true";
+    const hasCname = fs.existsSync(path.resolve(__dirname, "public", "CNAME"));
+
+    if (useCustomDomain || hasCname) {
+      return "/";
+    }
+
+    // Для github.io страниц используем /repo-name/
     const repo = process.env.GITHUB_REPOSITORY;
     if (repo) {
       const [, name] = repo.split("/");
@@ -131,6 +141,22 @@ export function inferSiteOrigin(): string {
     process.env.PUBLIC_SITE_URL;
 
   if (explicit) return explicit.replace(/\/+$/, "");
+
+  // Для кастомных доменов GitHub Pages
+  const useCustomDomain = process.env.VITE_USE_CUSTOM_DOMAIN === "true";
+  const hasCname = fs.existsSync(path.resolve(__dirname, "public", "CNAME"));
+
+  if (useCustomDomain || hasCname) {
+    // Читаем домен из CNAME файла если есть
+    if (hasCname) {
+      try {
+        const cname = fs.readFileSync(path.resolve(__dirname, "public", "CNAME"), "utf-8").trim();
+        if (cname) return `https://${cname}`;
+      } catch (e) {}
+    }
+    // Fallback на стандартный кастомный домен
+    return "https://architect.vai-rice.space";
+  }
 
   const repo = process.env.GITHUB_REPOSITORY;
   if (repo && process.env.GITHUB_ACTIONS) {

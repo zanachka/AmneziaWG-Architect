@@ -171,6 +171,38 @@ const statCards = [
             </p>
         </header>
 
+        <!-- ── Legal Disclaimer ─────────────────────────────────────────── -->
+        <section class="about-section legal-section a-stagger-0">
+            <div class="legal-card">
+                <div class="legal-icon">
+                    <Shield :size="28" />
+                </div>
+                <h2>⚠️ Юридическая информация</h2>
+                <div class="legal-content">
+                    <p class="legal-warning">
+                        <strong>Этот проект создан исключительно в ознакомительных и исследовательских целях.</strong>
+                    </p>
+                    <p>
+                        <strong>Проект никогда не создавался для использования в России или странах СНГ.</strong>
+                        Автор не несёт ответственности за любое использование данного программного обеспечения.
+                    </p>
+                    <div class="legal-allowed">
+                        <p><strong>Разрешённое использование:</strong></p>
+                        <ul>
+                            <li>Pentesting и security research</li>
+                            <li>CTF-соревнования</li>
+                            <li>Научные исследования</li>
+                            <li>Тестирование собственных сетей</li>
+                        </ul>
+                    </div>
+                    <p class="legal-disclaimer">
+                        Использование инструментов обфускации трафика может нарушать законодательство вашей страны.
+                        <strong>Никакие материалы этого проекта не являются призывом к нарушению законов.</strong>
+                    </p>
+                </div>
+            </div>
+        </section>
+
         <!-- ── Stats Strip ─────────────────────────────────────────────── -->
         <div class="stats-strip a-stagger-2">
             <div v-for="(s, i) in statCards" :key="i" class="stat-card">
@@ -1151,6 +1183,110 @@ const statCards = [
     font-size: 0.8rem !important;
     color: var(--text3) !important;
     font-style: italic;
+}
+
+/* ── Legal Disclaimer Section ─────────────────────────────────────────── */
+.legal-section {
+    border-color: rgba(239, 68, 68, 0.15);
+    background: linear-gradient(
+        135deg,
+        rgba(239, 68, 68, 0.02) 0%,
+        var(--bg2) 50%,
+        rgba(239, 68, 68, 0.02) 100%
+    );
+}
+
+.legal-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+}
+
+.legal-icon {
+    width: 56px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(239, 68, 68, 0.08);
+    border: 1px solid rgba(239, 68, 68, 0.15);
+    border-radius: 50%;
+    color: #ef4444;
+    animation: badgePulse 3s ease-in-out infinite;
+}
+
+@keyframes badgePulse {
+    0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+    50% { box-shadow: 0 0 20px 4px rgba(239, 68, 68, 0.1); }
+}
+
+.legal-section h2 {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text);
+    margin: 0;
+}
+
+.legal-content {
+    text-align: left;
+    max-width: 600px;
+}
+
+.legal-warning {
+    font-size: 0.95rem;
+    color: #fca5a5;
+    font-weight: 600;
+    margin-bottom: 12px;
+    padding: 12px;
+    background: rgba(239, 68, 68, 0.05);
+    border-left: 3px solid #ef4444;
+    border-radius: 0 var(--radius) var(--radius) 0;
+}
+
+.legal-content p {
+    font-size: 0.88rem;
+    color: var(--text2);
+    line-height: 1.7;
+    margin-bottom: 12px;
+}
+
+.legal-allowed {
+    padding: 14px 16px;
+    background: rgba(34, 197, 94, 0.03);
+    border: 1px solid rgba(34, 197, 94, 0.1);
+    border-radius: var(--radius);
+    margin: 14px 0;
+}
+
+.legal-allowed p {
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 8px;
+}
+
+.legal-allowed ul {
+    margin: 0;
+    padding-left: 20px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px 16px;
+}
+
+.legal-allowed li {
+    font-size: 0.82rem;
+    color: var(--text2);
+    line-height: 1.5;
+}
+
+.legal-disclaimer {
+    font-size: 0.8rem;
+    color: var(--text3);
+    font-style: italic;
+    margin-top: 12px;
+    padding-top: 12px;
+    border-top: 1px dashed var(--border);
 }
 
 /* ── Donation Section ─────────────────────────────────────────────────── */

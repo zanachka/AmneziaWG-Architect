@@ -1590,10 +1590,16 @@ export function genCfg(input: GeneratorInput): AWGConfig {
   // ── H1–H4: диапазоны для AWG 2.0 ─────────────────────────────────────────
   // Диапазоны H1–H4 НЕ должны пересекаться. Базы подобраны с запасом.
   // Это гарантирует уникальность заголовков и невозможность создать универсальное DPI-правило.
-  const h1 = rRange(100_000_000);
-  const h2 = rRange(1_200_000_000);
-  const h3 = rRange(2_400_000_000);
-  const h4 = rRange(3_600_000_000);
+  //
+  // Обновлённые диапазоны (Q1 2026) — шире и динамичнее:
+  //   H1: 100M - 1.1B  (Init Packet)
+  //   H2: 1.2B - 2.3B  (Response Packet)
+  //   H3: 2.4B - 3.5B  (Cookie Reply Packet)
+  //   H4: 3.6B - 4.29B (Data Packet, максимум uint32)
+  const h1 = rRange(rnd(100_000_000, 900_000_000), 100_000_000);
+  const h2 = rRange(rnd(1_200_000_000, 2_000_000_000), 100_000_000);
+  const h3 = rRange(rnd(2_400_000_000, 3_200_000_000), 100_000_000);
+  const h4 = rRange(rnd(3_600_000_000, 4_000_000_000), 150_000_000);
 
   // ── H1s–H4s: одиночные значения для AWG 1.x ──────────────────────────────
   const h1s = 100_000_000 + rnd(0, 4_000_000);
@@ -1604,25 +1610,76 @@ export function genCfg(input: GeneratorInput): AWGConfig {
   // ── S1–S4: рандомизация длин пакетов ──────────────────────────────────────
   // Длина пакетов в классическом WireGuard фиксирована — DPI легко их идентифицирует.
   // AmneziaWG добавляет случайный префикс 0..S1 байт к каждому типу пакета.
-  let s1 = Math.min(64, rnd(15, 32) + boost);
-  let s2 = Math.min(64, rnd(15, 32) + boost);
-  // Правило: S1 + 56 ≠ S2 (иначе size(init) может совпасть с size(resp))
-  if (s2 === s1 + 56) s2 += 1;
-  const s3 = Math.min(64, rnd(8, 24) + boost); // Cookie Reply ≤ 64
-  const s4 = Math.min(32, rnd(6, 18) + boost); // Data ≤ 32
+  //
+  // Обновлённые диапазоны (Q1 2026) — лучше официального клиента:
+  //   Официал: S1-S2: 15-150, S3: 1-64, S4: 1-20
+  //   Наш вариант: S1-S2: 1-150 (шире), S3: 1-64, S4: 1-32
+  //
+  // Важно: S1-S4 должны быть >= 1, иначе сервер считает что параметр отключён.
+  //
+  // Правила уникальности (как в официальном клиенте):
+  //   S1 + 56 ≠ S2  (size(init) ≠ size(resp))
+  //   S1 + 56 ≠ S3  (size(init) ≠ size(cookie))
+  //   S2 + 92 ≠ S3  (size(resp) ≠ size(cookie))
+  let s1 = rnd(1, 150);
+  let s2 = rnd(1, 150);
+
+  // Гарантируем S1 + 56 ≠ S2 (Init ≠ Response по размеру)
+  while (s2 === s1 + 56) {
+    s2 = rnd(1, 150);
+  }
+
+  const s3 = rnd(1, 64); // Cookie Reply
+
+  // Гарантируем S1 + 56 ≠ S3 и S2 + 92 ≠ S3
+  let s3Attempts = 0;
+  while ((s3 === s1 + 56 || s3 === s2 + 92) && s3Attempts < 10) {
+    s3 = rnd(1, 64);
+    s3Attempts++;
+  }
+
+  const s4 = rnd(1, 32); // Data: 1-32 (жёсткий лимит протокола)
 
   // ── Junk Train ────────────────────────────────────────────────────────────
   // Серия Jc случайных UDP-пакетов перед хендшейком.
   // Размывает временной и размерный профиль старта сессии.
   // Для AWG 1.0: Jc ≥ 4 и Jmax > 81 — требования официального клиента.
+  //
+  // Динамичная генерация с широкими диапазонами для уникальности каждой конфигурации.
   const minJc = version === "1.0" ? 4 : 3;
-  let jcv = Math.max(
-    minJc,
-    Math.min(10, junkLevel + (intensity === "high" ? 2 : 0)),
-  );
-  let jmin = 64 + boost * 2;
-  const baseJmax = version === "1.0" ? 128 : 256;
-  let jmax = Math.min(1280, baseJmax + iv * 150 + boost * 10);
+
+  // Jc: базовое значение от junkLevel + рандомизация
+  const jcBase = Math.max(minJc, junkLevel);
+  const jcRandom = rnd(0, intensity === "high" ? 6 : intensity === "medium" ? 4 : 2);
+  let jcv = Math.min(15, jcBase + jcRandom);
+  if (version === "1.0") jcv = Math.max(4, jcv);
+
+  // Jmin: широкие диапазоны в зависимости от интенсивности
+  const jminRanges: Record<Intensity, [number, number]> = {
+    low: [64, 256],
+    medium: [128, 512],
+    high: [256, 768],
+  };
+  let jmin = rnd(jminRanges[intensity][0], jminRanges[intensity][1]);
+
+  // Jmax: широкие диапазоны + гарантия что Jmax > Jmin + 64
+  const jmaxRanges: Record<Intensity, [number, number]> = {
+    low: [256, 512],
+    medium: [512, 1024],
+    high: [768, 1280],
+  };
+  let jmax = rnd(jmaxRanges[intensity][0], jmaxRanges[intensity][1]);
+
+  // Гарантируем Jmax > Jmin + 64
+  const minJmax = jmin + 64;
+  if (jmax < minJmax) {
+    jmax = minJmax + rnd(64, 256);
+  }
+
+  // Для AWG 1.0: Jmax > 81 (требование протокола)
+  if (version === "1.0" && jmax <= 81) {
+    jmax = 82 + rnd(50, 200);
+  }
 
   // ── Router Low-Power Mode ─────────────────────────────────────────────────
   // Жёсткие лимиты для роутеров с ограниченными ресурсами.
