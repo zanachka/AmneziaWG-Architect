@@ -1,4 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from "vitest";
+import fs from "node:fs";
 import {
   detectHostPlatform,
   normalizeBase,
@@ -6,6 +7,14 @@ import {
   inferSiteOrigin,
   makeAbsoluteUrl,
 } from "../../../vite.config";
+
+// Mock fs.existsSync to return false during tests (no CNAME file in test env)
+vi.mock("node:fs", () => ({
+  default: {
+    existsSync: vi.fn(() => false),
+  },
+  existsSync: vi.fn(() => false),
+}));
 
 describe("vite.config.ts URL and CI helpers", () => {
   const originalEnv = process.env;
@@ -35,6 +44,7 @@ describe("vite.config.ts URL and CI helpers", () => {
     delete process.env.SITE_ORIGIN;
     delete process.env.VITE_PUBLIC_SITE_URL;
     delete process.env.PUBLIC_SITE_URL;
+    delete process.env.VITE_USE_CUSTOM_DOMAIN;
   });
 
   afterEach(() => {
@@ -103,9 +113,17 @@ describe("vite.config.ts URL and CI helpers", () => {
       expect(inferBase()).toBe("/");
     });
 
-    it("uses repo name for github actions", () => {
+    it("uses / for github actions with custom domain (CNAME)", () => {
       process.env.GITHUB_ACTIONS = "true";
       process.env.GITHUB_REPOSITORY = "owner/my-repo";
+      process.env.VITE_USE_CUSTOM_DOMAIN = "true";
+      expect(inferBase()).toBe("/");
+    });
+
+    it("uses repo name for github actions without custom domain", () => {
+      process.env.GITHUB_ACTIONS = "true";
+      process.env.GITHUB_REPOSITORY = "owner/my-repo";
+      process.env.VITE_USE_CUSTOM_DOMAIN = "false";
       expect(inferBase()).toBe("/my-repo/");
     });
 
@@ -134,6 +152,11 @@ describe("vite.config.ts URL and CI helpers", () => {
     it("returns explicit origin stripped of trailing slashes", () => {
       process.env.VITE_SITE_ORIGIN = "https://example.com/";
       expect(inferSiteOrigin()).toBe("https://example.com");
+    });
+
+    it("returns custom domain for architect.vai-rice.space", () => {
+      process.env.VITE_USE_CUSTOM_DOMAIN = "true";
+      expect(inferSiteOrigin()).toBe("https://architect.vai-rice.space");
     });
 
     it("infers from GITHUB_REPOSITORY", () => {
